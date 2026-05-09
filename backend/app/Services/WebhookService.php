@@ -1,0 +1,266 @@
+<?php
+
+namespace App\Services;
+
+use App\Enums\ExecutionMode;
+use App\Exceptions\ApiException;
+use App\Models\Execution;
+use App\Models\Webhook;
+use App\Models\Workflow;
+use App\Models\Workspace;
+use Illuminate\Support\Str;
+
+class WebhookService
+{
+    public function __construct(private ExecutionService $executionService) {}
+
+    /**
+     * Create a webhook for a workflow.
+     *
+     * @param  array{path?: string, methods?: array, auth_type?: string, auth_config?: array, rate_limit?: int, response_mode?: string, response_status?: int, response_body?: array}  $data
+     */
+    public function create(Workspace $workspace, Workflow $workflow, array $data): Webhook
+    {
+        if ($workflow->webhooks()->whereNull('provider')->exists()) {
+            throw ApiException::conflict('This workflow already has a manual webhook. Each workflow can only have one manual webhook.');
+        }
+
+        return Webhook::create([
+            'workflow_id' => $workflow->id,
+            'workspace_id' => $workspace->id,
+            'uuid' => (string) Str::uuid(),
+            'path' => $data['path'] ?? null,
+            'methods' => $data['methods'] ?? ['POST'],
+            'is_active' => true,
+            'auth_type' => $data['auth_type'] ?? 'none',
+            'auth_config' => $data['auth_config'] ?? null,
+            'rate_limit' => $data['rate_limit'] ?? null,
+            'response_mode' => $data['response_mode'] ?? 'immediate',
+            'response_status' => $data['response_status'] ?? 200,
+            'response_body' => $data['response_body'] ?? null,
+        ]);
+    }
+
+    /**
+     * Update a webhook.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function update(Webhook $webhook, array $data): Webhook
+    {
+        $webhook->update($data);
+
+        return $webhook;
+    }
+
+    /**
+     * Delete a webhook.
+     */
+    public function delete(Webhook $webhook): void
+    {
+        $webhook->delete();
+    }
+
+    /**
+     * Handle an incoming webhook call from a third-party service.
+     *
+     * @return array{execution_id: int|null, status: string, response_status: int, response_body: mixed}
+     */
+    public function handleIncoming(Webhook $webhook, string $method, array $payload, array $headers): array
+    {
+        if (! $webhook->is_active) {
+            return [
+                'execution_id' => null,
+                'status' => 'inactive',
+                'response_status' => 410,
+                'response_body' => ['error' => 'Webhook is inactive.'],
+            ];
+        }
+
+        $webhook->loadMissing(['workflow.creator', 'workspace.owner']);
+
+        $workflow = $webhook->workflow;
+
+        if (! $workflow || ! $workflow->is_active) {
+            return [
+                'execution_id' => null,
+                'status' => 'workflow_inactive',
+                'response_status' => 410,
+                'response_body' => ['error' => 'Workflow is inactive.'],
+            ];
+        }
+
+        // Validate HTTP method
+        $allowedMethods = array_map('strtoupper', $webhook->methods ?? ['POST']);
+        if (! in_array(strtoupper($method), $allowedMethods)) {
+            return [
+                'execution_id' => null,
+                'status' => 'method_not_allowed',
+                'response_status' => 405,
+                'response_body' => ['error' => 'Method not allowed.'],
+            ];
+        }
+
+        // Validate auth
+        if (! $this->verifyAuth($webhook, $headers)) {
+            return [
+                'execution_id' => null,
+                'status' => 'unauthorized',
+                'response_status' => 401,
+                'response_body' => ['error' => 'Unauthorized.'],
+            ];
+        }
+
+        // Update call stats
+        $webhook->increment('call_count', 1, ['last_called_at' => now()]);
+
+        // Trigger execution
+        $triggerData = [
+            'webhook_uuid' => $webhook->uuid,
+            'method' => $method,
+            'headers' => $headers,
+            'body' => $payload,
+        ];
+
+        try {
+            $execution = $this->executionService->trigger(
+                $workflow,
+                $workflow->creator ?? $webhook->workspace->owner,
+                $triggerData,
+                ExecutionMode::Webhook,
+            );
+
+            if ($webhook->response_mode === 'wait') {
+                $execution = $this->waitForCompletion($execution, $webhook->response_timeout ?? 30);
+            }
+
+            return [
+                'execution_id' => $execution->id,
+                'status' => $webhook->response_mode === 'wait' ? $execution->status->value : 'triggered',
+                'response_status' => $webhook->response_status,
+                'response_body' => $webhook->response_body ?? [
+                    'success' => $execution->status === \App\Enums\ExecutionStatus::Completed,
+                    'execution_id' => $execution->id,
+                    'result' => $webhook->response_mode === 'wait' ? $execution->result_data : null,
+                ],
+            ];
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Webhook trigger failed: '.$e->getMessage(), [
+                'exception' => $e,
+                'webhook_uuid' => $webhook->uuid,
+                'workflow_id' => $workflow->id,
+            ]);
+
+            return [
+                'execution_id' => null,
+                'status' => 'error',
+                'response_status' => 500,
+                'response_body' => ['error' => 'Failed to trigger execution.'],
+            ];
+        }
+    }
+
+    /**
+     * Verify authentication for an incoming webhook request.
+     */
+    private function verifyAuth(Webhook $webhook, array $headers): bool
+    {
+        if ($webhook->auth_type === 'none') {
+            return true;
+        }
+
+        $config = $webhook->auth_config ?? [];
+
+        return match ($webhook->auth_type) {
+            'bearer' => $this->verifyBearerAuth($config, $headers),
+            'basic' => $this->verifyBasicAuth($config, $headers),
+            'header' => $this->verifyHeaderAuth($config, $headers),
+            default => false,
+        };
+    }
+
+    private function verifyBearerAuth(array $config, array $headers): bool
+    {
+        $expected = $config['token'] ?? '';
+        $authorization = $headers['authorization'] ?? $headers['Authorization'] ?? '';
+
+        if (str_starts_with($authorization, 'Bearer ')) {
+            $token = substr($authorization, 7);
+
+            return hash_equals($expected, $token);
+        }
+
+        return false;
+    }
+
+    private function verifyBasicAuth(array $config, array $headers): bool
+    {
+        $expectedUser = $config['username'] ?? '';
+        $expectedPass = $config['password'] ?? '';
+        $authorization = $headers['authorization'] ?? $headers['Authorization'] ?? '';
+
+        if (str_starts_with($authorization, 'Basic ')) {
+            $decoded = base64_decode(substr($authorization, 6));
+            [$user, $pass] = explode(':', $decoded, 2) + [1 => ''];
+
+            return hash_equals($expectedUser, $user) && hash_equals($expectedPass, $pass);
+        }
+
+        return false;
+    }
+
+    private function verifyHeaderAuth(array $config, array $headers): bool
+    {
+        $headerName = strtolower($config['header_name'] ?? '');
+        $expectedValue = $config['header_value'] ?? '';
+
+        $normalizedHeaders = array_change_key_case($headers);
+        $actualValue = $normalizedHeaders[$headerName] ?? '';
+
+        return hash_equals($expectedValue, $actualValue);
+    }
+
+    private function waitForCompletion(Execution $execution, int $timeoutSeconds): Execution
+    {
+        // Exponential backoff polling strategy:
+        //
+        // Instead of a fixed 500ms sleep (which means 60 DB queries in 30 seconds),
+        // we start with short intervals and back off exponentially.
+        // This reduces DB load by ~70% while still responding quickly when
+        // short workflows (< 2s) complete.
+        //
+        // Pattern: 100ms → 200ms → 400ms → 800ms → 1600ms → 3000ms (capped)
+        // Total queries in 30s: ~12 instead of ~60.
+        //
+        // If the execution doesn't finish within the timeout, we return the
+        // in-progress execution. The response_body will contain the execution_id
+        // so the caller can poll GET /executions/{id} for the final result.
+
+        $deadline = now()->addSeconds($timeoutSeconds);
+        $sleepMs = 100;
+        $maxSleepMs = 3000;
+
+        $terminalStatuses = [
+            \App\Enums\ExecutionStatus::Completed,
+            \App\Enums\ExecutionStatus::Failed,
+            \App\Enums\ExecutionStatus::Cancelled,
+        ];
+
+        while (now()->lt($deadline)) {
+            $execution->refresh();
+
+            if (in_array($execution->status, $terminalStatuses)) {
+                return $execution;
+            }
+
+            usleep($sleepMs * 1000);
+
+            // Double the sleep time, capped at maxSleepMs
+            $sleepMs = min($sleepMs * 2, $maxSleepMs);
+        }
+
+        // Timed out — return the execution in its current state.
+        // The caller receives the execution_id and can poll for the result.
+        return $execution;
+    }
+}

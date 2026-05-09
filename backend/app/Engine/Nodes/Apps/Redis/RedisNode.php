@@ -1,0 +1,269 @@
+<?php
+
+namespace App\Engine\Nodes\Apps\Redis;
+
+use App\Engine\Nodes\Apps\AppNode;
+use App\Engine\Execution\NodePayload;
+use Illuminate\Support\Facades\Redis;
+
+/**
+ * Redis node — key/value operations against a Redis instance.
+ *
+ * Credentials:
+ *   host        — Redis host (default: 127.0.0.1)
+ *   port        — Redis port (default: 6379)
+ *   password    — Auth password (optional)
+ *   database    — Database index (default: 0)
+ *
+ * Uses Laravel's Redis facade with a dynamic connection resolved at runtime.
+ * The default "default" connection is used unless credentials specify a different host,
+ * in which case a temporary connection config is pushed.
+ */
+class RedisNode extends AppNode
+{
+    protected function errorCode(): string
+    {
+        return 'REDIS_ERROR';
+    }
+
+    protected function operations(): array
+    {
+        return [
+            'get' => $this->get(...),
+            'set' => $this->set(...),
+            'delete' => $this->delete(...),
+            'exists' => $this->exists(...),
+            'incr' => $this->incr(...),
+            'decr' => $this->decr(...),
+            'lpush' => $this->lpush(...),
+            'rpush' => $this->rpush(...),
+            'lrange' => $this->lrange(...),
+            'hset' => $this->hset(...),
+            'hget' => $this->hget(...),
+            'hgetall' => $this->hgetall(...),
+            'expire' => $this->expire(...),
+            'ttl' => $this->ttl(...),
+            'keys' => $this->keys(...),
+            'flush_db' => $this->flushDb(...),
+        ];
+    }
+
+    private function redis(NodePayload $payload): \Illuminate\Redis\Connections\Connection
+    {
+        $credentials = $payload->credentials ?? [];
+        $host = (string) ($credentials['host'] ?? '');
+
+        if ($host && $host !== '127.0.0.1' && $host !== 'localhost') {
+            $name = 'workflow_redis_node_'.md5(json_encode($credentials));
+
+            config([
+                "database.redis.{$name}" => [
+                    'host' => $host,
+                    'port' => (int) ($credentials['port'] ?? 6379),
+                    'password' => $credentials['password'] ?? null,
+                    'database' => (int) ($credentials['database'] ?? 0),
+                ],
+            ]);
+
+            return Redis::connection($name);
+        }
+
+        $db = (int) ($credentials['database'] ?? 0);
+        $connection = Redis::connection('default');
+        $connection->select($db);
+
+        return $connection;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function get(NodePayload $payload): array
+    {
+        $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
+        $value = $this->redis($payload)->get($key);
+
+        return ['key' => $key, 'value' => $value, 'exists' => $value !== null];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function set(NodePayload $payload): array
+    {
+        $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
+        $value = $payload->inputData['value'] ?? $payload->config['value'] ?? null;
+        $ttl = isset($payload->config['ttl']) ? (int) $payload->config['ttl'] : null;
+
+        $serialized = is_array($value) ? json_encode($value) : (string) $value;
+
+        if ($ttl !== null && $ttl > 0) {
+            $this->redis($payload)->setex($key, $ttl, $serialized);
+        } else {
+            $this->redis($payload)->set($key, $serialized);
+        }
+
+        return ['key' => $key, 'set' => true, 'ttl' => $ttl];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function delete(NodePayload $payload): array
+    {
+        $keys = array_filter((array) ($payload->inputData['keys'] ?? [$payload->inputData['key'] ?? $payload->config['key'] ?? '']));
+        $count = $this->redis($payload)->del($keys);
+
+        return ['deleted' => $count, 'keys' => $keys];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function exists(NodePayload $payload): array
+    {
+        $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
+
+        return ['key' => $key, 'exists' => (bool) $this->redis($payload)->exists($key)];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function incr(NodePayload $payload): array
+    {
+        $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
+        $by = (int) ($payload->config['by'] ?? 1);
+
+        $value = $by > 1 ? $this->redis($payload)->incrby($key, $by) : $this->redis($payload)->incr($key);
+
+        return ['key' => $key, 'value' => $value];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function decr(NodePayload $payload): array
+    {
+        $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
+        $by = (int) ($payload->config['by'] ?? 1);
+
+        $value = $by > 1 ? $this->redis($payload)->decrby($key, $by) : $this->redis($payload)->decr($key);
+
+        return ['key' => $key, 'value' => $value];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function lpush(NodePayload $payload): array
+    {
+        $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
+        $values = (array) ($payload->inputData['values'] ?? [$payload->inputData['value'] ?? $payload->config['value'] ?? '']);
+
+        $length = $this->redis($payload)->lpush($key, ...$values);
+
+        return ['key' => $key, 'length' => $length];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function rpush(NodePayload $payload): array
+    {
+        $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
+        $values = (array) ($payload->inputData['values'] ?? [$payload->inputData['value'] ?? $payload->config['value'] ?? '']);
+
+        $length = $this->redis($payload)->rpush($key, ...$values);
+
+        return ['key' => $key, 'length' => $length];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function lrange(NodePayload $payload): array
+    {
+        $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
+        $start = (int) ($payload->config['start'] ?? 0);
+        $stop = (int) ($payload->config['stop'] ?? -1);
+
+        return ['key' => $key, 'items' => $this->redis($payload)->lrange($key, $start, $stop)];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function hset(NodePayload $payload): array
+    {
+        $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
+        $fields = (array) ($payload->inputData['fields'] ?? $payload->config['fields'] ?? []);
+
+        $this->redis($payload)->hmset($key, $fields);
+
+        return ['key' => $key, 'set' => true, 'fields' => array_keys($fields)];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function hget(NodePayload $payload): array
+    {
+        $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
+        $field = (string) ($payload->inputData['field'] ?? $payload->config['field'] ?? '');
+
+        return ['key' => $key, 'field' => $field, 'value' => $this->redis($payload)->hget($key, $field)];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function hgetall(NodePayload $payload): array
+    {
+        $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
+
+        return ['key' => $key, 'fields' => $this->redis($payload)->hgetall($key)];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function expire(NodePayload $payload): array
+    {
+        $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
+        $seconds = (int) ($payload->inputData['seconds'] ?? $payload->config['seconds'] ?? 3600);
+
+        return ['key' => $key, 'set' => (bool) $this->redis($payload)->expire($key, $seconds)];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function ttl(NodePayload $payload): array
+    {
+        $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
+        $ttl = $this->redis($payload)->ttl($key);
+
+        return ['key' => $key, 'ttl' => $ttl, 'persists' => $ttl === -1];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function keys(NodePayload $payload): array
+    {
+        $pattern = (string) ($payload->inputData['pattern'] ?? $payload->config['pattern'] ?? '*');
+
+        return ['keys' => $this->redis($payload)->keys($pattern)];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function flushDb(NodePayload $payload): array
+    {
+        $this->redis($payload)->flushdb();
+
+        return ['flushed' => true];
+    }
+}

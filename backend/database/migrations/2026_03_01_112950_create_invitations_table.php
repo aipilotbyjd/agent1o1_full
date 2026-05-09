@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('invitations', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->foreignUuid('workspace_id')->constrained('workspaces')->cascadeOnDelete();
+            $table->string('email');
+            $table->string('role');
+            $table->string('token', 64)->unique();
+            $table->foreignUuid('invited_by')->constrained('users')->cascadeOnDelete();
+            $table->timestamp('accepted_at')->nullable();
+            $table->timestamp('expires_at');
+            $table->timestamps();
+
+            $table->index('workspace_id');
+            $table->index('invited_by');
+            $table->index('email');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('invitations');
+    }
+};

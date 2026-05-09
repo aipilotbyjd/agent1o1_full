@@ -1,0 +1,52 @@
+{
+  "name": "Code Node Example Workflow",
+  "description": "Demonstrates using the CodeNode to transform data with JavaScript",
+  "nodes": [
+    {
+      "id": "trigger_1",
+      "type": "trigger.manual",
+      "name": "Manual Trigger",
+      "data": {
+        "name": "Start"
+      }
+    },
+    {
+      "id": "code_1",
+      "type": "util.code",
+      "name": "Transform User Data",
+      "data": {
+        "name": "Process Users",
+        "code": "var users = input.users;\nvar output = {\n  total: users.length,\n  adults: users.filter(u => u.age >= 18),\n  names: users.map(u => u.name.toUpperCase()),\n  averageAge: users.reduce((sum, u) => sum + u.age, 0) / users.length\n};",
+        "timeout": 30,
+        "memory_limit": 134217728
+      }
+    },
+    {
+      "id": "code_2",
+      "type": "util.code",
+      "name": "Generate Report",
+      "data": {
+        "name": "Create Summary",
+        "code": "var data = input;\nvar output = {\n  report: `Found ${data.total} users, ${data.adults.length} are adults.`,\n  timestamp: new Date().toISOString(),\n  processed: true\n};"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "trigger_1",
+      "target": "code_1"
+    },
+    {
+      "source": "code_1",
+      "target": "code_2"
+    }
+  ],
+  "trigger_data": {
+    "users": [
+      { "name": "Alice", "age": 25 },
+      { "name": "Bob", "age": 17 },
+      { "name": "Charlie", "age": 30 },
+      { "name": "Diana", "age": 22 }
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+services:
+  # Web Service
+  - type: web
+    name: agent1o1
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        value: https://agent1o1.onrender.com
+      - key: APP_KEY
+        generateValue: true
+      - key: LOG_CHANNEL
+        value: stack
+      - key: LOG_LEVEL
+        value: error
+      - key: CACHE_DRIVER
+        value: redis
+      - key: SESSION_DRIVER
+        value: cookie
+      - key: QUEUE_CONNECTION
+        value: redis
+      - key: SESSION_LIFETIME
+        value: 120
+      - key: BROADCAST_DRIVER
+        value: log
+      - key: FILESYSTEM_DISK
+        value: local
+      - key: VIEW_COMPILED_PATH
+        value: storage/framework/views
+      - key: TRUSTED_PROXIES
+        value: 0.0.0.0/0
+      - key: FORCE_HTTPS
+        value: true
+      - key: HSTS_MAX_AGE
+        value: 63072000
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_SSL_MODE
+        value: require
+
+# Database: Using external Neon PostgreSQL
+# Add DATABASE_URL env var in Render dashboard instead of defining here
+# This allows using the secure Neon pooler connection
