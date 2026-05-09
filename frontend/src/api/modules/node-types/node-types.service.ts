@@ -24,4 +24,9 @@ export const NodeTypeService = {
 		axiosClient
 			.get<TApiResponse<INodeType>>(E.detail(nodeType), { signal })
 			.then(unwrap<INodeType>),
+
+	categoryDetail: (id: string, signal?: AbortSignal) =>
+		axiosClient
+			.get<TApiResponse<INodeCategory>>(E.categoryDetail(id), { signal })
+			.then(unwrap<INodeCategory>),
 };

@@ -32,6 +32,14 @@ export const AuthService = {
 		axiosClient
 			.post<TMessageResponse>(AuthEndpoints.resetPassword, payload)
 			.then((r) => r.data),
+
+	resendVerification: () =>
+		axiosClient.post<TMessageResponse>(AuthEndpoints.resendVerification).then((r) => r.data),
+
+	verifyEmail: (id: string, hash: string, query?: Record<string, string>) =>
+		axiosClient
+			.get<TMessageResponse>(AuthEndpoints.verifyEmail(id, hash), { params: query })
+			.then((r) => r.data),
 };
 
 export const UserService = {
@@ -61,4 +69,6 @@ export const UserService = {
 	},
 
 	deleteAvatar: () => axiosClient.delete(UserEndpoints.deleteAvatar).then(() => undefined),
+
+	destroy: () => axiosClient.delete(UserEndpoints.destroy).then(() => undefined),
 };

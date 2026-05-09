@@ -19,22 +19,14 @@ import { WorkflowEditorEndpoints as E } from './workflows.endpoints';
 
 /**
  * Workflow editor-specific operations:
- * clone, validate, test-node, versions, pinned-data.
+ * versions, pinned-data, and build workflow.
  * Standard CRUD + execute/activate/deactivate/duplicate live in workflows.service.ts.
  */
 export const WorkflowEditorService = {
-	clone: (ws: string, id: string, body: ICloneWorkflowDto) =>
-		axiosClient.post<TApiResponse<IWorkflow>>(E.clone(ws, id), body).then(unwrap<IWorkflow>),
-
-	validate: (ws: string, nodes: IWorkflowNode[], connections: IWorkflowConnection[]) =>
+	build: (ws: string, nodes: IWorkflowNode[], connections: IWorkflowConnection[]) =>
 		axiosClient
-			.post<TApiResponse<IWorkflowValidationResult>>(E.validate(ws), { nodes, connections })
+			.post<TApiResponse<IWorkflowValidationResult>>(E.build(ws), { nodes, connections })
 			.then(unwrap<IWorkflowValidationResult>),
-
-	testNode: (ws: string, body: ITestNodeDto) =>
-		axiosClient
-			.post<TApiResponse<ITestNodeResult>>(E.testNode(ws), body)
-			.then(unwrap<ITestNodeResult>),
 
 	listVersions: (ws: string, workflowId: string, signal?: AbortSignal) =>
 		axiosClient
@@ -66,14 +58,14 @@ export const WorkflowEditorService = {
 
 	listPinnedData: (ws: string, workflowId: string, signal?: AbortSignal) =>
 		axiosClient
-			.get<TApiResponse<IWorkflowPinnedData[]>>(E.pinnedData(ws, workflowId), { signal })
+			.get<TApiResponse<IWorkflowPinnedData[]>>(E.pinnedDataList(ws, workflowId), { signal })
 			.then(unwrap<IWorkflowPinnedData[]>),
 
 	setPinnedData: (ws: string, id: string, body: ISetPinnedDataDto) =>
 		axiosClient
-			.post<TApiResponse<IWorkflowPinnedData>>(E.pinnedData(ws, id), body)
+			.post<TApiResponse<IWorkflowPinnedData>>(E.pinnedDataCreate(ws, id), body)
 			.then(unwrap<IWorkflowPinnedData>),
 
-	deletePinnedData: (ws: string, id: string, nodeId: string) =>
-		axiosClient.delete(E.pinnedDataNode(ws, id, nodeId)).then(() => undefined),
+	deletePinnedData: (ws: string, id: string, pinnedDataId: string) =>
+		axiosClient.delete(E.pinnedDataDelete(ws, id, pinnedDataId)).then(() => undefined),
 };

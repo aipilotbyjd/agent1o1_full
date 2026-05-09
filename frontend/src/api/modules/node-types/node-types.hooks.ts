@@ -21,3 +21,10 @@ export const useNodeType = (nodeType: string) =>
 		queryFn: ({ signal }) => NodeTypeService.detail(nodeType, signal),
 		enabled: !!nodeType,
 	});
+
+export const useNodeCategory = (id: string) =>
+	useQuery({
+		queryKey: nodeTypeKeys.categoryDetail(id),
+		queryFn: ({ signal }) => NodeTypeService.categoryDetail(id, signal),
+		enabled: !!id,
+	});

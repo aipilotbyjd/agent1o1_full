@@ -87,6 +87,28 @@ export const useResetPassword = () =>
 		onError: notify.fromError('Failed to reset password'),
 	});
 
+export const useResendVerificationEmail = () =>
+	useMutation({
+		mutationFn: () => AuthService.resendVerification(),
+		onSuccess: () => notify.success('Verification email sent'),
+		onError: notify.fromError('Failed to send verification email'),
+	});
+
+export const useVerifyEmail = () =>
+	useMutation({
+		mutationFn: ({
+			id,
+			hash,
+			query,
+		}: {
+			id: string;
+			hash: string;
+			query?: Record<string, string>;
+		}) => AuthService.verifyEmail(id, hash, query),
+		onSuccess: () => notify.success('Email verified'),
+		onError: notify.fromError('Email verification failed'),
+	});
+
 // ─── User Mutations ──────────────────────────────────────────
 
 export const useUpdateProfile = () => {
@@ -129,5 +151,18 @@ export const useDeleteAvatar = () => {
 			notify.success('Avatar removed');
 		},
 		onError: notify.fromError('Failed to delete avatar'),
+	});
+};
+
+export const useDeleteAccount = () => {
+	const qc = useQueryClient();
+	return useMutation({
+		mutationFn: () => UserService.destroy(),
+		onSuccess: () => {
+			clearTokens();
+			qc.clear();
+			notify.success('Account deleted');
+		},
+		onError: notify.fromError('Failed to delete account'),
 	});
 };

@@ -139,6 +139,32 @@ export const useExportWorkflow = (ws: string) =>
 		onError: notify.fromError('Failed to export workflow'),
 	});
 
+export const useCreateWorkflowWebhook = (ws: string) => {
+	const qc = useQueryClient();
+	return useMutation({
+		mutationFn: ({ id, body }: { id: string; body?: Record<string, unknown> }) =>
+			WorkflowService.createWebhook(ws, id, body),
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: workflowKeys.all(ws) });
+			notify.success('Webhook trigger created');
+		},
+		onError: notify.fromError('Failed to create webhook trigger'),
+	});
+};
+
+export const useCreateWorkflowPollingTrigger = (ws: string) => {
+	const qc = useQueryClient();
+	return useMutation({
+		mutationFn: ({ id, body }: { id: string; body?: Record<string, unknown> }) =>
+			WorkflowService.createPollingTrigger(ws, id, body),
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: workflowKeys.all(ws) });
+			notify.success('Polling trigger created');
+		},
+		onError: notify.fromError('Failed to create polling trigger'),
+	});
+};
+
 export const useToggleFavorite = (ws: string) => {
 	const qc = useQueryClient();
 	return useMutation({

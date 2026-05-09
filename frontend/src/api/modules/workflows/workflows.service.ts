@@ -66,4 +66,14 @@ export const WorkflowService = {
 		axiosClient
 			.put<TApiResponse<IWorkflow>>(E.update(ws, id), { is_favorite })
 			.then(unwrap<IWorkflow>),
+
+	createWebhook: (ws: string, id: string, body?: Record<string, unknown>) =>
+		axiosClient
+			.post<TApiResponse<unknown>>(E.createWebhook(ws, id), body)
+			.then(unwrap<unknown>),
+
+	createPollingTrigger: (ws: string, id: string, body?: Record<string, unknown>) =>
+		axiosClient
+			.post<TApiResponse<unknown>>(E.createPollingTrigger(ws, id), body)
+			.then(unwrap<unknown>),
 };

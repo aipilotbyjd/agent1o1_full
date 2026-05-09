@@ -15,22 +15,10 @@ export const TemplateService = {
 			.get<TApiResponse<ITemplate[]>>(E.list(), { params: filters, signal })
 			.then(unwrap<ITemplate[]>),
 
-	featured: (signal?: AbortSignal) =>
-		axiosClient
-			.get<TApiResponse<ITemplate[]>>(E.featured(), { signal })
-			.then(unwrap<ITemplate[]>),
-
-	categories: (signal?: AbortSignal) =>
-		axiosClient
-			.get<TApiResponse<TTemplateCategory[]>>(E.categories(), { signal })
-			.then(unwrap<TTemplateCategory[]>),
-
 	detail: (id: string, signal?: AbortSignal) =>
 		axiosClient
 			.get<TApiResponse<ITemplateDetail>>(E.detail(id), { signal })
 			.then(unwrap<ITemplateDetail>),
-
-	trackView: (id: string) => axiosClient.post(E.view(id)).then(() => undefined),
 
 	use: (ws: string, templateId: string, workflowName?: string) =>
 		axiosClient

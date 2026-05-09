@@ -4,5 +4,4 @@ export const VariableEndpoints = {
 	detail: (ws: string, id: string) => `/workspaces/${ws}/variables/${id}`,
 	update: (ws: string, id: string) => `/workspaces/${ws}/variables/${id}`,
 	delete: (ws: string, id: string) => `/workspaces/${ws}/variables/${id}`,
-	resolve: (ws: string) => `/workspaces/${ws}/variables/resolve`,
 } as const;

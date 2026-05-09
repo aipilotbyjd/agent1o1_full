@@ -11,6 +11,9 @@ export const WorkflowEndpoints = {
 	import: (ws: string) => `/workspaces/${ws}/workflows/import`,
 	export: (ws: string, id: string) => `/workspaces/${ws}/workflows/${id}/export`,
 	executions: (ws: string, id: string) => `/workspaces/${ws}/workflows/${id}/executions`,
+	createWebhook: (ws: string, id: string) => `/workspaces/${ws}/workflows/${id}/webhook`,
+	createPollingTrigger: (ws: string, id: string) =>
+		`/workspaces/${ws}/workflows/${id}/polling-trigger`,
 } as const;
 
 export const WorkflowEditorEndpoints = {
@@ -22,12 +25,13 @@ export const WorkflowEditorEndpoints = {
 	rollback: (ws: string, id: string, version: string) =>
 		`/workspaces/${ws}/workflows/${id}/versions/${version}/rollback`,
 	compareVersions: (ws: string, id: string) => `/workspaces/${ws}/workflows/${id}/versions/diff`,
-	validate: (ws: string) => `/workspaces/${ws}/workflows/validate`,
-	testNode: (ws: string) => `/workspaces/${ws}/workflows/test-node`,
-	clone: (ws: string, id: string) => `/workspaces/${ws}/workflows/${id}/clone`,
-	pinnedData: (ws: string, id: string) => `/workspaces/${ws}/workflows/${id}/pinned-data`,
-	pinnedDataNode: (ws: string, id: string, nodeId: string) =>
-		`/workspaces/${ws}/workflows/${id}/pinned-data/${nodeId}`,
+	build: (ws: string) => `/workspaces/${ws}/workflows/build`,
+	pinnedDataList: (ws: string, id: string) => `/workspaces/${ws}/workflows/${id}/pinned-data`,
+	pinnedDataCreate: (ws: string, id: string) => `/workspaces/${ws}/workflows/${id}/pinned-data`,
+	pinnedDataToggle: (ws: string, id: string, pinnedDataId: string) =>
+		`/workspaces/${ws}/workflows/${id}/pinned-data/${pinnedDataId}/toggle`,
+	pinnedDataDelete: (ws: string, id: string, pinnedDataId: string) =>
+		`/workspaces/${ws}/workflows/${id}/pinned-data/${pinnedDataId}`,
 } as const;
 
 export const WorkflowShareEndpoints = {
