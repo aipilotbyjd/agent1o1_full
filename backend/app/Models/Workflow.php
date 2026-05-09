@@ -163,6 +163,30 @@ class Workflow extends Model
     }
 
     /**
+     * @return HasMany<WorkflowContractSnapshot, $this>
+     */
+    public function contractSnapshots(): HasMany
+    {
+        return $this->hasMany(WorkflowContractSnapshot::class);
+    }
+
+    /**
+     * @return HasMany<WorkflowApproval, $this>
+     */
+    public function approvals(): HasMany
+    {
+        return $this->hasMany(WorkflowApproval::class);
+    }
+
+    /**
+     * @return HasMany<WorkflowEnvironmentRelease, $this>
+     */
+    public function environmentReleases(): HasMany
+    {
+        return $this->hasMany(WorkflowEnvironmentRelease::class);
+    }
+
+    /**
      * @return BelongsTo<self, $this>
      */
     public function errorWorkflow(): BelongsTo

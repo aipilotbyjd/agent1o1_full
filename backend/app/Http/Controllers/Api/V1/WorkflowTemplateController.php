@@ -11,6 +11,7 @@ use App\Models\Workspace;
 use App\Services\WorkflowTemplateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class WorkflowTemplateController extends Controller
 {
@@ -65,6 +66,91 @@ class WorkflowTemplateController extends Controller
             'Workflow template retrieved successfully.',
             new WorkflowTemplateResource($workflowTemplate),
         );
+    }
+
+    /**
+     * Create a new template (admin operation).
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $this->can(Permission::TemplateCreate);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:2000'],
+            'category' => ['required', 'string', 'max:100'],
+            'icon' => ['nullable', 'string', 'max:100'],
+            'color' => ['nullable', 'string', 'max:50'],
+            'tags' => ['nullable', 'array'],
+            'trigger_type' => ['required', 'string'],
+            'trigger_config' => ['nullable', 'array'],
+            'nodes' => ['required', 'array'],
+            'edges' => ['required', 'array'],
+            'viewport' => ['nullable', 'array'],
+            'settings' => ['nullable', 'array'],
+            'instructions' => ['nullable', 'string'],
+            'required_credentials' => ['nullable', 'array'],
+            'is_featured' => ['boolean'],
+            'sort_order' => ['integer'],
+        ]);
+
+        $validated['slug'] = Str::slug($validated['name'] . '-' . Str::random(6));
+        $validated['is_active'] = true;
+
+        $template = WorkflowTemplate::create($validated);
+
+        return $this->successResponse(
+            'Workflow template created successfully.',
+            new WorkflowTemplateResource($template),
+            201,
+        );
+    }
+
+    /**
+     * Update an existing template (admin operation).
+     */
+    public function update(Request $request, WorkflowTemplate $workflowTemplate): JsonResponse
+    {
+        $this->can(Permission::TemplateUpdate);
+
+        $validated = $request->validate([
+            'name' => ['sometimes', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:2000'],
+            'category' => ['sometimes', 'string', 'max:100'],
+            'icon' => ['nullable', 'string', 'max:100'],
+            'color' => ['nullable', 'string', 'max:50'],
+            'tags' => ['nullable', 'array'],
+            'trigger_type' => ['sometimes', 'string'],
+            'trigger_config' => ['nullable', 'array'],
+            'nodes' => ['sometimes', 'array'],
+            'edges' => ['sometimes', 'array'],
+            'viewport' => ['nullable', 'array'],
+            'settings' => ['nullable', 'array'],
+            'instructions' => ['nullable', 'string'],
+            'required_credentials' => ['nullable', 'array'],
+            'is_featured' => ['boolean'],
+            'is_active' => ['boolean'],
+            'sort_order' => ['integer'],
+        ]);
+
+        $workflowTemplate->update($validated);
+
+        return $this->successResponse(
+            'Workflow template updated successfully.',
+            new WorkflowTemplateResource($workflowTemplate),
+        );
+    }
+
+    /**
+     * Delete a template (admin operation).
+     */
+    public function destroy(WorkflowTemplate $workflowTemplate): JsonResponse
+    {
+        $this->can(Permission::TemplateDelete);
+
+        $workflowTemplate->delete();
+
+        return $this->successResponse('Workflow template deleted successfully.');
     }
 
     /**

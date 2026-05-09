@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Enums\ExecutionMode;
 use App\Enums\ExecutionStatus;
 use App\Enums\Permission;
+use App\Jobs\ResumeWorkflowJob;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Execution\BulkDeleteExecutionRequest;
 use App\Http\Requests\Api\V1\Execution\CompareExecutionRequest;
@@ -206,6 +207,40 @@ class ExecutionController extends Controller
             new ExecutionResource($newExecution),
             201,
         );
+    }
+
+    /**
+     * Pause an active execution (transitions to Waiting status).
+     */
+    public function pause(Workspace $workspace, Execution $execution): JsonResponse
+    {
+        $this->can(Permission::ExecutionCancel);
+
+        if (! $execution->status->isActive() || $execution->status === ExecutionStatus::Waiting) {
+            return $this->errorResponse('Only running or pending executions can be paused.', 422);
+        }
+
+        $execution->markWaiting(now(), ['paused_by' => auth()->id()]);
+        $execution->load(['workflow', 'triggeredBy']);
+
+        return $this->successResponse('Execution paused successfully.', new ExecutionResource($execution));
+    }
+
+    /**
+     * Resume a paused execution.
+     */
+    public function resume(Workspace $workspace, Execution $execution): JsonResponse
+    {
+        $this->can(Permission::ExecutionCancel);
+
+        if ($execution->status !== ExecutionStatus::Waiting) {
+            return $this->errorResponse('Only waiting executions can be resumed.', 422);
+        }
+
+        ResumeWorkflowJob::dispatch($execution);
+        $execution->load(['workflow', 'triggeredBy']);
+
+        return $this->successResponse('Execution resume dispatched.', new ExecutionResource($execution));
     }
 
     /**

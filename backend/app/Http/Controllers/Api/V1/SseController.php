@@ -119,18 +119,14 @@ class SseController extends Controller
             $heartbeatInterval = 15;
             $lastHeartbeat = time();
 
-            // Poll active executions' streams
-            $activeExecutions = $workspace->executions()
-                ->active()
-                ->pluck('id')
-                ->toArray();
+            // Snapshot the active execution IDs at connect time.
+            // We refresh this list on every heartbeat so executions that
+            // start after the connection opens are picked up within 15s.
+            $knownIds = $workspace->executions()->active()->pluck('id')->toArray();
 
-            $streamKeys = [];
             $lastIds = [];
-            foreach ($activeExecutions as $execId) {
-                $key = "execution:{$execId}:events";
-                $streamKeys[$key] = '0-0';
-                $lastIds[$key] = '0-0';
+            foreach ($knownIds as $execId) {
+                $lastIds["execution:{$execId}:events"] = '0-0';
             }
 
             while (true) {
@@ -144,7 +140,7 @@ class SseController extends Controller
                     break;
                 }
 
-                if (! empty($streamKeys)) {
+                if (! empty($lastIds)) {
                     try {
                         $messages = Redis::connection()->client()->xread(
                             $lastIds,
@@ -177,13 +173,10 @@ class SseController extends Controller
                 }
 
                 if ((time() - $lastHeartbeat) >= $heartbeatInterval) {
-                    // Refresh active executions list periodically
-                    $activeExecutions = $workspace->executions()
-                        ->active()
-                        ->pluck('id')
-                        ->toArray();
-
-                    foreach ($activeExecutions as $execId) {
+                    // Re-query active executions to pick up any that started
+                    // after this SSE connection was opened.
+                    $currentIds = $workspace->executions()->active()->pluck('id')->toArray();
+                    foreach ($currentIds as $execId) {
                         $key = "execution:{$execId}:events";
                         if (! isset($lastIds[$key])) {
                             $lastIds[$key] = '0-0';

@@ -210,4 +210,36 @@ class Workspace extends Model
     {
         return $this->hasMany(AgentSkill::class);
     }
+
+    /**
+     * @return HasMany<WorkflowApproval, $this>
+     */
+    public function approvals(): HasMany
+    {
+        return $this->hasMany(WorkflowApproval::class);
+    }
+
+    /**
+     * @return HasMany<WorkspaceEnvironment, $this>
+     */
+    public function environments(): HasMany
+    {
+        return $this->hasMany(WorkspaceEnvironment::class);
+    }
+
+    /**
+     * @return HasMany<ConnectorMetricDaily, $this>
+     */
+    public function connectorMetrics(): HasMany
+    {
+        return $this->hasMany(ConnectorMetricDaily::class);
+    }
+
+    /**
+     * @return HasMany<ConnectorCallAttempt, $this>
+     */
+    public function connectorCallAttempts(): HasMany
+    {
+        return $this->hasMany(ConnectorCallAttempt::class);
+    }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ExecutionMode;
 use App\Enums\ExecutionStatus;
+use App\Models\AiFixSuggestion;
 use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -146,6 +147,14 @@ class Execution extends Model
     public function checkpoint(): HasOne
     {
         return $this->hasOne(ExecutionCheckpoint::class);
+    }
+
+    /**
+     * @return HasMany<AiFixSuggestion, $this>
+     */
+    public function aiFixSuggestions(): HasMany
+    {
+        return $this->hasMany(AiFixSuggestion::class);
     }
 
     // ── State Transitions ─────────────────────────────────────
