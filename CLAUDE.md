@@ -32,12 +32,52 @@ wiki/
 
 ## Page Conventions
 
+Every wiki page has three required parts:
+
+1. **YAML frontmatter** — machine-readable metadata
+2. **`# Title` + one-line TL;DR** — the human/LLM hook
+3. **`## Sources` section at the bottom** — provenance for every claim
+
+### Frontmatter
+
+```yaml
+---
+type: entity | concept | tech | reference | overview | query-output
+status: sourced | derived-from-code | stale | hub
+sources: <count of raw/ files this page draws on>
+last_updated: YYYY-MM-DD
+tags: [list, of, tags]
+---
+```
+
+`status` values:
+- **sourced** — backed by ≥1 file in `raw/`
+- **derived-from-code** — bootstrapped from the codebase before any source was ingested; flag for re-grounding when sources arrive
+- **stale** — newer source contradicts or supersedes; needs revision
+- **hub** — aggregator page that re-summarises whenever new sources arrive (e.g. `references/competitors.md`)
+
+### Body
+
 - All wiki pages are markdown.
-- Every page must have a `# Title` and a one-line **TL;DR** immediately below it.
 - Use `[[PageName]]` for wiki cross-references (Obsidian-style wikilinks).
 - Entity pages: cover purpose, key fields, relationships, and notable behaviour.
 - Concept pages: cover what it is, how it works, open questions.
 - Tech pages: cover the tool, version, why it was chosen, key config.
+- Query-output pages: file the answer + the question that produced it + date.
+
+### Sources section
+
+Every page ends with:
+
+```
+## Sources
+
+- `raw/<file>` — what was drawn from it
+- `backend/app/Models/Foo.php` — code reference (if no raw source yet)
+- *(none — derived from code on YYYY-MM-DD)* — explicit unsourced flag
+```
+
+This is what makes lint possible. Without it, claims float free.
 
 ---
 
@@ -67,37 +107,47 @@ Operations: `ingest`, `query`, `lint`, `create`, `update`.
 
 ## Operations
 
+The wiki has three operations: **ingest**, **query**, **lint**. Pages are *source-driven* — they're created or updated when a source is ingested, not preemptively to mirror the codebase.
+
 ### Ingest
 When the user drops a source into `wiki/raw/` and says "ingest X":
-1. Read the source document.
+1. Read the source document in full.
 2. Discuss key takeaways with the user if needed.
-3. Write or update a summary page in the wiki.
-4. Update all relevant entity and concept pages.
-5. Update `index.md`.
-6. Append an entry to `log.md`.
+3. Write a summary page (or update the existing one) under the appropriate folder.
+4. Update all relevant entity, concept, and reference pages — including their `sources:` count and `## Sources` section.
+5. Flip any `status: derived-from-code` pages that this source backs to `status: sourced`.
+6. Update `index.md`.
+7. Append an entry to `log.md`.
+
+A single ingest may touch 10–15 pages. That's expected.
 
 ### Query
 When the user asks a question:
-1. Read `index.md` to find relevant pages.
+1. Read `index.md` to locate relevant pages.
 2. Read those pages in full.
-3. Synthesize an answer with page citations.
-4. If the answer is reusable knowledge, offer to file it as a new wiki page.
+3. Synthesize an answer with page citations (link back to the wiki page, not just the raw source).
+4. **If the answer is reusable knowledge, offer to file it as a new page** under `wiki/concepts/` or `wiki/references/` with `type: query-output` and `status: sourced`. Good answers compound — they shouldn't disappear into chat history.
 
 ### Lint
 When the user asks to health-check the wiki:
-1. Scan for: orphan pages (no inbound links), stale claims, missing cross-references, contradictions.
-2. Suggest new pages for concepts mentioned but not yet documented.
-3. Suggest new sources to research.
-4. Append a lint entry to `log.md`.
+1. **Provenance gap** — list every page with `status: derived-from-code` and every page where `sources: 0`. These need backing.
+2. **Stale claims** — pages where a newer raw source contradicts the body.
+3. **Orphans** — pages with no inbound `[[links]]`.
+4. **Missing cross-references** — pages that mention a concept that has its own page but don't link to it.
+5. **Contradictions** — between pages.
+6. **Suggested next sources** — what raw inputs would resolve the biggest gaps. *Don't suggest creating empty entity pages to mirror the codebase — wait for a source.*
+7. Append a lint entry to `log.md`.
 
 ---
 
 ## Guardrails
 
 - **Never modify files in `wiki/raw/`** — they are immutable source documents.
+- **Don't create entity/concept pages preemptively to mirror the codebase.** The wiki is source-driven. If the user hasn't ingested a source about it and isn't actively asking about it, don't create the page. `git grep` already mirrors the codebase.
 - **Always update `index.md`** when creating or significantly changing a page.
 - **Always append to `log.md`** after any ingest, significant query, or lint pass.
 - **Prefer updating existing pages** over creating new ones unless the topic is genuinely new.
+- **Every claim needs a source line.** If you write something in a wiki page and can't point to a `raw/` file or a code path, mark the page `status: derived-from-code` and note it under `## Sources`.
 - Do not create wiki pages for ephemeral decisions — those belong in git commit messages or PR descriptions.
 
 ---

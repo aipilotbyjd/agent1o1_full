@@ -1,3 +1,11 @@
+---
+type: entity
+status: sourced
+sources: 2
+last_updated: 2026-05-09
+tags: [entity, security, integrations]
+---
+
 # Credential
 
 **TL;DR**: Encrypted storage for third-party auth — API keys, OAuth tokens, and similar secrets used by nodes.
@@ -46,12 +54,24 @@ OAuth flow uses `OAuthCredentialState` to track the PKCE/state parameter during 
 |--------|------|--------|
 | GET | `/workspaces/{id}/credentials` | List |
 | POST | `/workspaces/{id}/credentials` | Create |
+| GET | `/workspaces/{id}/credentials/{id}` | Get |
 | PUT | `/workspaces/{id}/credentials/{id}` | Update |
 | DELETE | `/workspaces/{id}/credentials/{id}` | Delete |
+| POST | `/workspaces/{id}/credentials/{id}/test` | Test credential validity |
 | GET | `/credential-types` | List available types |
-| POST | `/workspaces/{id}/credentials/{id}/oauth/connect` | Start OAuth |
-| GET | `/oauth/callback` | OAuth redirect handler |
+| GET | `/credential-types/{type}` | Get type schema |
+| POST | `/workspaces/{id}/oauth/initiate` | Start OAuth flow |
+| GET | `/oauth/callback` | **Public** — OAuth redirect handler |
 
 Model: `backend/app/Models/Credential.php`, `CredentialType.php`
 Frontend types: `frontend/src/types/credential.type.ts`
 API module: `frontend/src/api/modules/credentials/`
+
+---
+
+## Sources
+
+- `raw/api-routes-2026-05-09.txt` — confirms credentials CRUD + test endpoint + credential-types + `workspaces/{id}/oauth/initiate` + public `oauth/callback` routes
+- `raw/frontend-api-modules-2026-05-09.txt` — confirms `credentials/` and `credential-types/` as separate API modules
+- `backend/app/Models/Credential.php`, `CredentialType.php` — code references
+- *(no external sources yet — flag: encryption-at-rest design notes, OAuth integration spec)*

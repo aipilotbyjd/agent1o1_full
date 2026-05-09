@@ -1,3 +1,11 @@
+---
+type: concept
+status: sourced
+sources: 2
+last_updated: 2026-05-09
+tags: [runtime, queues, observability]
+---
+
 # Execution Engine
 
 **TL;DR**: The backend system that runs workflows — processes nodes in order, passes data between them, retries on failure, and logs everything.
@@ -63,3 +71,13 @@ Each node receives a data object and produces a data object. The connection grap
 ## Credits
 
 Executions consume credits from the workspace's credit balance. Usage is tracked in `ConnectorCallAttempt` and aggregated in `ConnectorMetricDaily` and `UsageDailySnapshot`.
+
+---
+
+## Sources
+
+- `raw/api-routes-2026-05-09.txt` — confirms execution lifecycle endpoints (execute, retry, replay, cancel, stream, stream-all, stats, compare, bulk-delete, archived, archived-stats, archived-download, archived-restore); also polling-triggers workspace CRUD and workflow-level polling-trigger create; notification-channels + notification-preferences routes
+- `raw/frontend-api-modules-2026-05-09.txt` — confirms `executions/`, `archived-executions/`, `polling-triggers/`, `notification-channels/`, `notification-preferences/`, `notifications/` modules
+- `backend/composer.json` — Laravel Horizon as the queue layer
+- `backend/app/Jobs/`, `backend/app/Models/Execution.php` — code references
+- *(no external sources yet — flag: queue-tier policy, retry/backoff strategy, SSE protocol notes)*

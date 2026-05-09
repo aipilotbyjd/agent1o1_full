@@ -1,3 +1,11 @@
+---
+type: tech
+status: sourced
+sources: 2
+last_updated: 2026-05-09
+tags: [tech, frontend, react]
+---
+
 # Frontend Tech Stack
 
 **TL;DR**: React 19 + TypeScript + Vite SPA, built on the Boltify admin theme, with React Flow for the workflow canvas and TanStack Query for data fetching.
@@ -82,10 +90,17 @@ frontend/src/
 Each feature has its own module under `frontend/src/api/modules/`:
 ```
 workflows/
-├── index.ts        # Exported functions
-├── queries.ts      # TanStack Query hooks (useWorkflows, useWorkflow, etc.)
-└── mutations.ts    # Mutations (useCreateWorkflow, useUpdateWorkflow, etc.)
+├── index.ts              # Re-exports
+├── workflows.endpoints.ts  # Axios request functions
+├── workflows.service.ts    # Business logic / data transforms
+├── workflows.hooks.ts      # TanStack Query hooks (useWorkflows, etc.)
+└── workflows.keys.ts       # Query key factories
 ```
+
+The `workflows/` module has extra files: `editor.hooks.ts`, `editor.service.ts`, `shares.hooks.ts`, `shares.service.ts` for editor-specific and share logic.
+
+**All API modules** (27 total):
+`activity-logs`, `agents`, `archived-executions`, `auth`, `billing`, `credential-types`, `credentials`, `credits`, `dashboard`, `executions`, `folders`, `git-sync`, `invitations`, `log-streaming`, `node-types`, `notes`, `notification-channels`, `notification-preferences`, `notifications`, `polling-triggers`, `tags`, `templates`, `variables`, `webhooks`, `workflows`, `workspace-members`, `workspaces`
 
 ## Auth
 
@@ -102,3 +117,12 @@ workflows/
 ## i18n
 
 Supported locales: English (`en`), Spanish (`es`), Arabic (`ar`). Translations in `frontend/src/locales/`. Uses `i18next` + `react-i18next`.
+
+---
+
+## Sources
+
+- `frontend/package.json` — confirms React 19, Vite, TanStack Query, React Flow, Tailwind v4, i18next
+- `raw/frontend-api-modules-2026-05-09.txt` — confirms API module layout (endpoints/service/hooks/keys per module) and full 27-module inventory
+- `raw/api-routes-2026-05-09.txt` — cross-reference confirms backend routes align with frontend modules
+- *(no external sources yet — flag: Boltify theme docs, design-system decisions)*

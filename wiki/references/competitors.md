@@ -1,3 +1,11 @@
+---
+type: reference
+status: hub
+sources: 0
+last_updated: 2026-05-09
+tags: [reference, competitive, gumloop, n8n, zapier]
+---
+
 # Competitor Analysis: Gumloop, n8n, Zapier
 
 **TL;DR**: LinkFlow draws inspiration from all three. n8n is the closest technical reference. Gumloop defines the AI-first vision. Zapier sets the usability benchmark.
@@ -102,3 +110,16 @@
 | Templates | ✅ | ✅ | ✅ | ✅ |
 
 LinkFlow targets the gap between n8n (powerful but complex) and Gumloop (AI-first but limited) — with SaaS convenience, credits-based pricing, and a strong AI/agent story.
+
+---
+
+## Sources
+
+- *(none — this page is a `status: hub` aggregator. Drop competitor blog posts, pricing pages, changelogs, screenshots into `raw/` and re-ingest. Each ingest should: refresh the comparison table, add a row under the relevant competitor section, and bump `sources:`)*
+
+### Suggested raw inputs to ingest
+
+- `gumloop.com/pricing` archive
+- `n8n.io/changelog` recent entries
+- `zapier.com/blog` AI-related posts
+- Screenshots of each editor (use Obsidian Web Clipper + image download)

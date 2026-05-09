@@ -1,3 +1,11 @@
+---
+type: entity
+status: sourced
+sources: 2
+last_updated: 2026-05-09
+tags: [entity, triggers, integrations]
+---
+
 # Webhook
 
 **TL;DR**: An inbound HTTP endpoint that triggers a workflow when called by an external service.
@@ -37,11 +45,21 @@ External services POST to `/webhooks/{token}`. The public route (no auth) receiv
 | Method | Path | Action |
 |--------|------|--------|
 | GET | `/workspaces/{id}/webhooks` | List |
-| POST | `/workspaces/{id}/webhooks` | Create |
+| GET | `/workspaces/{id}/webhooks/{id}` | Get |
 | PUT | `/workspaces/{id}/webhooks/{id}` | Update |
 | DELETE | `/workspaces/{id}/webhooks/{id}` | Delete |
-| POST | `/webhooks/{token}` | **Public** — trigger endpoint |
+| GET\|POST\|PUT\|PATCH\|DELETE | `/webhook/{uuid}` | **Public** — receive trigger |
+| GET\|POST\|PUT\|PATCH | `/webhook-wait/{uuid}` | **Public** — wait-node resume |
 
 Model: `backend/app/Models/Webhook.php`
 Frontend types: `frontend/src/types/webhook.type.ts`
 API module: `frontend/src/api/modules/webhooks/`
+
+---
+
+## Sources
+
+- `raw/api-routes-2026-05-09.txt` — confirms public `/webhook/{uuid}` (all HTTP methods), `/webhook-wait/{uuid}` (resume), and workspace `/webhooks/{id}` management routes; note: no `POST /webhooks` (webhooks are created programmatically, not via UI form)
+- `raw/frontend-api-modules-2026-05-09.txt` — confirms `webhooks/` API module
+- `backend/app/Models/Webhook.php` — code reference
+- *(no external sources yet — flag: webhook security/IP-allowlist policy, wait-node semantics)*

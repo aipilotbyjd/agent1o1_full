@@ -1,3 +1,11 @@
+---
+type: concept
+status: sourced
+sources: 2
+last_updated: 2026-05-09
+tags: [ui, canvas, frontend]
+---
+
 # Workflow Builder (Visual Canvas Editor)
 
 **TL;DR**: The core UI — a React Flow canvas where users drag, drop, and connect nodes to build automations visually.
@@ -57,3 +65,12 @@ Users can pin test JSON output to any node. When running in test mode, downstrea
 - Zapier: "Zap history" (execution log) — implemented as [[execution]] history
 
 See [[references/competitors]] for the full competitive breakdown.
+
+---
+
+## Sources
+
+- `raw/frontend-api-modules-2026-05-09.txt` — confirms `workflows/` has `editor.hooks.ts`, `editor.service.ts`, `shares.hooks.ts`, `shares.service.ts` in addition to standard module files
+- `raw/api-routes-2026-05-09.txt` — confirms all canvas-related sub-resources: versions (with diff/publish/rollback), shares, sticky-notes, pinned-data (with toggle), polling-trigger, build endpoint
+- `frontend/src/pages/editor/WorkflowEditor/`, `frontend/package.json` — React Flow and supporting libs
+- *(no external sources yet — flag: UX research, n8n editor screenshots for comparison)*

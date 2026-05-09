@@ -1,3 +1,11 @@
+---
+type: entity
+status: sourced
+sources: 2
+last_updated: 2026-05-09
+tags: [entity, configuration]
+---
+
 # Variable
 
 **TL;DR**: Workspace-level key-value store for environment variables and shared config accessible across all workflows in a workspace.
@@ -46,3 +54,12 @@ Variables of type `secret` are encrypted and masked in the UI — never returned
 Model: `backend/app/Models/Variable.php`
 Frontend types: `frontend/src/types/variable.type.ts`
 API module: `frontend/src/api/modules/variables/`
+
+---
+
+## Sources
+
+- `raw/api-routes-2026-05-09.txt` — confirms `GET/POST /workspaces/{id}/variables`, `GET/PUT/DELETE /workspaces/{id}/variables/{id}`
+- `raw/frontend-api-modules-2026-05-09.txt` — confirms `variables/` API module
+- `backend/app/Models/Variable.php` — code reference
+- *(no external sources yet — flag: secret-vs-plain typing decision, scoping semantics)*

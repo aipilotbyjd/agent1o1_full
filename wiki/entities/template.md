@@ -1,3 +1,11 @@
+---
+type: entity
+status: sourced
+sources: 2
+last_updated: 2026-05-09
+tags: [entity, templates, sharing]
+---
+
 # Template
 
 **TL;DR**: A pre-built, shareable workflow blueprint that users can fork into their workspace.
@@ -39,11 +47,18 @@ When a user forks a template, a new `Workflow` is created in their workspace wit
 | Method | Path | Action |
 |--------|------|--------|
 | GET | `/templates` | List public templates |
-| GET | `/workspaces/{id}/templates` | List workspace templates |
-| POST | `/workspaces/{id}/templates` | Create |
-| GET | `/templates/{id}` | Get |
-| POST | `/templates/{id}/fork` | Fork into workspace |
+| GET | `/templates/{id}` | Get public template |
+| POST | `/workspaces/{id}/templates/{id}/use` | Fork template into workspace |
 
 Model: `backend/app/Models/WorkflowTemplate.php`
 Frontend types: `frontend/src/types/template.type.ts`
 API module: `frontend/src/api/modules/templates/`
+
+---
+
+## Sources
+
+- `raw/api-routes-2026-05-09.txt` — confirms public `GET /templates` + `GET /templates/{id}` + workspace-scoped `POST /workspaces/{id}/templates/{id}/use`
+- `raw/frontend-api-modules-2026-05-09.txt` — confirms `templates/` API module
+- `backend/app/Models/WorkflowTemplate.php` — code reference
+- *(no external sources yet — flag: template marketplace design, fork-vs-clone semantics decision)*

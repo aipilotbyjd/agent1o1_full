@@ -1,3 +1,11 @@
+---
+type: concept
+status: sourced
+sources: 2
+last_updated: 2026-05-09
+tags: [auth, permissions, multi-tenant]
+---
+
 # Teams, Roles & Permissions
 
 **TL;DR**: A workspace has an owner and members with roles. The `workspace.role` middleware enforces permissions on every API request.
@@ -48,3 +56,12 @@ A single user can belong to multiple workspaces. The frontend workspace context 
 ## WorkspaceSetting
 
 `WorkspaceSetting` — additional settings beyond the JSON `settings` field on `Workspace`. Likely covers: SSO config, security settings, notification defaults.
+
+---
+
+## Sources
+
+- `raw/api-routes-2026-05-09.txt` — confirms `GET/PUT/DELETE /workspaces/{id}/members/{user}`, `GET/POST/DELETE /workspaces/{id}/invitations/{token}`, `POST /invitations/{token}/accept`, `POST /invitations/{token}/decline`, `POST /workspaces/{id}/transfer-ownership`, `POST /workspaces/{id}/leave`
+- `raw/frontend-api-modules-2026-05-09.txt` — confirms `workspace-members/` and `invitations/` as separate API modules
+- `backend/routes/api.php` — `workspace.role` middleware + `scopeBindings()` confirmed in route file
+- *(no external sources yet — flag: permission matrix, role-vs-capability decision, SSO requirements)*

@@ -1,3 +1,11 @@
+---
+type: entity
+status: sourced
+sources: 2
+last_updated: 2026-05-09
+tags: [entity, workflow, nodes]
+---
+
 # Node (Node Type)
 
 **TL;DR**: A single step in a workflow. The `Node` model defines the *type* (what a node can do); individual workflow steps reference these types by `type` string.
@@ -75,3 +83,12 @@ Each parameter can have `show_if` conditions for dynamic visibility.
 Model: `backend/app/Models/Node.php`, `NodeCategory.php`
 Frontend types: `frontend/src/types/nodeType.type.ts`
 API module: `frontend/src/api/modules/node-types/`
+
+---
+
+## Sources
+
+- `raw/api-routes-2026-05-09.txt` — confirms `/node-categories` and `/node-categories/{id}` + `/nodes` and `/nodes/{id}` global catalog routes
+- `raw/frontend-api-modules-2026-05-09.txt` — confirms `node-types/` API module (note: frontend names this `node-types`, backend route says `nodes`)
+- `backend/app/Models/Node.php`, `NodeCategory.php` — code references
+- *(no external sources yet — flag: node-type taxonomy design, n8n/Zapier integration catalog comparison)*

@@ -1,3 +1,11 @@
+---
+type: concept
+status: sourced
+sources: 2
+last_updated: 2026-05-09
+tags: [billing, credits, monetization]
+---
+
 # Billing & Credits
 
 **TL;DR**: Workspaces subscribe to a Plan (Stripe) and receive a monthly credit allocation. Additional credits can be purchased via Credit Packs. Executions consume credits.
@@ -53,3 +61,12 @@ The **Workspace** is the billable unit (implements Cashier `Billable` trait). Us
 
 - How are credits denominated? (per workflow run? per node execution? per API call?)
 - Is there a free tier with a credit limit?
+
+---
+
+## Sources
+
+- `raw/api-routes-2026-05-09.txt` — confirms `POST /billing/checkout`, `POST /billing/credits`, `GET /billing/portal`, `GET /credits/balance`, `GET /credits/transactions`; note `billing/` and `credits/` are separate frontend modules
+- `raw/frontend-api-modules-2026-05-09.txt` — confirms `billing/` and `credits/` as separate API modules
+- `backend/composer.json` — confirms `laravel/cashier` is the Stripe integration
+- *(no external sources yet — flag: pricing decision doc, credit-cost-per-node table, plan tiers)*

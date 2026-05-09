@@ -1,3 +1,11 @@
+---
+type: entity
+status: sourced
+sources: 2
+last_updated: 2026-05-09
+tags: [entity, runtime, observability]
+---
+
 # Execution
 
 **TL;DR**: One run of a workflow — tracks overall status, timing, and per-node results.
@@ -66,11 +74,35 @@ The scheduler runs:
 | Method | Path | Action |
 |--------|------|--------|
 | GET | `/workspaces/{id}/executions` | List |
+| GET | `/workspaces/{id}/executions/stats` | Aggregate stats |
+| GET | `/workspaces/{id}/executions/compare` | Compare two executions |
+| GET | `/workspaces/{id}/executions/stream-all` | SSE stream for all executions |
+| DELETE | `/workspaces/{id}/executions/bulk` | Bulk delete |
 | GET | `/workspaces/{id}/executions/{id}` | Get with node details |
-| DELETE | `/workspaces/{id}/executions/{id}` | Cancel/delete |
+| DELETE | `/workspaces/{id}/executions/{id}` | Delete |
+| POST | `/workspaces/{id}/executions/{id}/cancel` | Cancel running execution |
+| GET | `/workspaces/{id}/executions/{id}/logs` | Get log lines |
+| GET | `/workspaces/{id}/executions/{id}/nodes` | Get per-node results |
+| POST | `/workspaces/{id}/executions/{id}/replay` | Replay with same input |
+| POST | `/workspaces/{id}/executions/{id}/retry` | Retry failed execution |
+| GET | `/workspaces/{id}/executions/{id}/stream` | SSE stream for one execution |
+| GET | `/workspaces/{id}/executions/archived` | List archived executions |
+| GET | `/workspaces/{id}/executions/archived/stats` | Archive stats |
+| GET | `/workspaces/{id}/executions/archived/{id}` | Get archived execution |
+| GET | `/workspaces/{id}/executions/archived/{id}/download` | Download archived logs |
+| POST | `/workspaces/{id}/executions/archived/{id}/restore` | Restore to active |
 | GET | `/workspaces/{id}/workflows/{id}/executions` | Executions for a workflow |
 | POST | `/workspaces/{id}/workflows/{id}/execute` | Trigger a run |
 
 Model: `backend/app/Models/Execution.php`, `ExecutionNode.php`
 Frontend types: `frontend/src/types/execution.type.ts`
 API module: `frontend/src/api/modules/executions/`
+
+---
+
+## Sources
+
+- `raw/api-routes-2026-05-09.txt` — confirms all execution lifecycle endpoints (list/show/cancel/retry/replay/compare/stream/stream-all/stats/bulk-delete/archived/archived-stats/archived-download/archived-restore)
+- `raw/frontend-api-modules-2026-05-09.txt` — confirms `executions/` and `archived-executions/` as separate API modules
+- `backend/app/Models/Execution.php`, `ExecutionNode.php` — code references
+- *(no external sources yet — flag: SSE streaming protocol notes, archive-and-restore design doc)*

@@ -1,3 +1,11 @@
+---
+type: tech
+status: sourced
+sources: 2
+last_updated: 2026-05-09
+tags: [tech, backend, laravel]
+---
+
 # Backend Tech Stack
 
 **TL;DR**: Laravel 12 / PHP 8.5 monolith with Horizon queues, Passport OAuth, Cashier billing, and Pulse monitoring.
@@ -72,8 +80,10 @@ backend/
 | `workflows:schedule-cron` | Every minute |
 | `workflows:poll` | Every minute |
 | `billing:snapshot-daily-usage` | Daily 00:05 |
+| `billing:expire-credit-packs` | Daily 00:10 |
+| `billing:reset-monthly-credits` | Daily |
 | `executions:prune` | Daily 02:00 |
-| `executions:archive` | Daily 02:30 |
+| `executions:archive --batch-size=500` | Daily 02:30 |
 | `webhooks:health-check` | Daily 03:00 |
 | `horizon:snapshot` | Every 5 minutes |
 | `admin:health-check` | Every 5 minutes |
@@ -84,3 +94,12 @@ backend/
 - Pest 4 for all tests
 - Run: `php artisan test --compact`
 - Every code change must have a test
+
+---
+
+## Sources
+
+- `backend/composer.json` — confirms Laravel 12, Horizon, Passport, Cashier, Pulse, Pest 4
+- `raw/api-routes-2026-05-09.txt` — confirms route layering, middleware chain, and full 190-route surface
+- `raw/frontend-api-modules-2026-05-09.txt` — confirms frontend API module count aligns with backend entity surface
+- *(no external sources yet — flag: deployment/infra notes, queue-tier policy, encryption-at-rest design)*
