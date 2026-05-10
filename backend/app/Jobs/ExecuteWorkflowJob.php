@@ -3,9 +3,11 @@
 namespace App\Jobs;
 
 use App\Engine\WorkflowEngine;
+use App\Enums\ExecutionStatus;
 use App\Models\Execution;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
 
 class ExecuteWorkflowJob implements ShouldQueue
 {
@@ -36,6 +38,16 @@ class ExecuteWorkflowJob implements ShouldQueue
 
     public function handle(WorkflowEngine $engine): void
     {
+        $this->execution->refresh();
+
+        if ($this->execution->status !== ExecutionStatus::Pending) {
+            Log::info("ExecuteWorkflowJob skipped — execution {$this->execution->id} is not pending.", [
+                'status' => $this->execution->status->value,
+            ]);
+
+            return;
+        }
+
         $engine->run($this->execution);
     }
 

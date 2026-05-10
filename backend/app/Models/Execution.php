@@ -197,11 +197,23 @@ class Execution extends Model
         ]);
     }
 
-    public function resume(): void
+    /**
+     * Atomically transition from Waiting → Running.
+     *
+     * Returns true if this call won the race; false if another process
+     * already resumed or cancelled the execution.
+     */
+    public function resume(): bool
     {
-        $this->update([
-            'status' => ExecutionStatus::Running,
-        ]);
+        $updated = static::where('id', $this->id)
+            ->where('status', ExecutionStatus::Waiting)
+            ->update(['status' => ExecutionStatus::Running]);
+
+        if ($updated) {
+            $this->status = ExecutionStatus::Running;
+        }
+
+        return (bool) $updated;
     }
 
     public function canRetry(): bool

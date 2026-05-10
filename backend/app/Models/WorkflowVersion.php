@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Exceptions\ApiException;
 use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,22 @@ class WorkflowVersion extends Model
 {
     /** @use HasFactory<\Database\Factories\WorkflowVersionFactory> */
     use HasFactory, HasUuid;
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $version) {
+            if (
+                $version->exists
+                && $version->is_published
+                && $version->isDirty(['nodes', 'edges', 'trigger_config', 'trigger_type'])
+            ) {
+                throw new ApiException(
+                    'Published versions are immutable. Create a new version instead.',
+                    422
+                );
+            }
+        });
+    }
 
     protected $fillable = [
         'workflow_id',

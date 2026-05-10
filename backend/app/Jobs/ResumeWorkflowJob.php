@@ -29,7 +29,7 @@ class ResumeWorkflowJob implements ShouldQueue
 
     public function __construct(public Execution $execution)
     {
-        $this->onQueue('workflows-default');
+        $this->onQueue('workflows-resume');
     }
 
     public function handle(WorkflowEngine $engine): void

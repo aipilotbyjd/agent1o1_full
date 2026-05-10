@@ -5,6 +5,7 @@ namespace App\Engine\Execution;
 use App\Engine\RunContext;
 use App\Engine\Sse\SsePublisher;
 use App\Models\Execution;
+use App\Services\CreditMeterService;
 use App\Services\ExecutionService;
 use Illuminate\Support\Facades\Log;
 
@@ -17,7 +18,10 @@ use Illuminate\Support\Facades\Log;
  */
 class ExecutionFinalizer
 {
-    public function __construct(private readonly SsePublisher $ssePublisher) {}
+    public function __construct(
+        private readonly SsePublisher $ssePublisher,
+        private readonly CreditMeterService $creditMeter,
+    ) {}
 
     /**
      * Mark the execution as successfully completed.
@@ -30,6 +34,17 @@ class ExecutionFinalizer
             resultData: ['completed_nodes' => $context->completedCount()],
             durationMs: $durationMs,
         );
+
+        // Charge credits for completed nodes (idempotent — safe if called twice)
+        try {
+            $nodes = $execution->nodes()->get()->all();
+            $this->creditMeter->consume($execution, $nodes);
+        } catch (\Throwable $e) {
+            Log::error('Failed to consume credits for execution.', [
+                'execution_id' => $execution->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         // Single query: atomic counter increment + timestamp update
         $execution->workflow->increment('execution_count', 1, ['last_executed_at' => now()]);
@@ -105,6 +120,18 @@ class ExecutionFinalizer
             return;
         }
 
+        // Guard: cap error workflow chain depth to prevent infinite cascades
+        // (e.g. A fails → B → B fails → C → C fails → A → …)
+        $currentDepth = (int) ($execution->trigger_data['__error_depth'] ?? 0);
+        if ($currentDepth >= 3) {
+            Log::warning('Error workflow chain depth limit reached — skipping.', [
+                'execution_id' => $execution->id,
+                'depth' => $currentDepth,
+            ]);
+
+            return;
+        }
+
         try {
             $errorWorkflow = \App\Models\Workflow::find($errorWorkflowId);
 
@@ -117,6 +144,7 @@ class ExecutionFinalizer
                         'source_workflow_id' => $workflow->id,
                         'source_workflow_name' => $workflow->name,
                         'error' => $error,
+                        '__error_depth' => $currentDepth + 1,
                     ],
                 );
             }
