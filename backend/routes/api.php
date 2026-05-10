@@ -26,9 +26,11 @@ use App\Http\Controllers\Api\V1\AgentController;
 use App\Http\Controllers\Api\V1\AgentConversationController;
 use App\Http\Controllers\Api\V1\AgentSkillController;
 use App\Http\Controllers\Api\V1\AgentTriggerController;
+use App\Http\Controllers\Api\V1\AiAutofixController;
 use App\Http\Controllers\Api\V1\ArchivedExecutionController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BillingController;
+use App\Http\Controllers\Api\V1\ConnectorMetricController;
 use App\Http\Controllers\Api\V1\CredentialController;
 use App\Http\Controllers\Api\V1\CredentialTypeController;
 use App\Http\Controllers\Api\V1\CreditController;
@@ -40,6 +42,7 @@ use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\LogStreamingConfigController;
 use App\Http\Controllers\Api\V1\NodeCategoryController;
 use App\Http\Controllers\Api\V1\NodeController;
+use App\Http\Controllers\Api\V1\NodeSandboxController;
 use App\Http\Controllers\Api\V1\NotificationChannelController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\NotificationPreferenceController;
@@ -54,13 +57,17 @@ use App\Http\Controllers\Api\V1\VariableController;
 use App\Http\Controllers\Api\V1\WaitWebhookController;
 use App\Http\Controllers\Api\V1\WebhookController;
 use App\Http\Controllers\Api\V1\WebhookReceiverController;
+use App\Http\Controllers\Api\V1\WorkflowApprovalController;
 use App\Http\Controllers\Api\V1\WorkflowBuilderController;
+use App\Http\Controllers\Api\V1\WorkflowContractController;
 use App\Http\Controllers\Api\V1\WorkflowController;
+use App\Http\Controllers\Api\V1\WorkflowEnvironmentReleaseController;
 use App\Http\Controllers\Api\V1\WorkflowImportExportController;
 use App\Http\Controllers\Api\V1\WorkflowShareController;
 use App\Http\Controllers\Api\V1\WorkflowTemplateController;
 use App\Http\Controllers\Api\V1\WorkflowVersionController;
 use App\Http\Controllers\Api\V1\WorkspaceController;
+use App\Http\Controllers\Api\V1\WorkspaceEnvironmentController;
 use App\Http\Controllers\Api\V1\WorkspaceMemberController;
 use App\Http\Controllers\Api\V1\WorkspaceSettingController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
@@ -262,6 +269,9 @@ Route::prefix('v1')->as('v1.')->group(function () {
 
                     Route::post('import', [WorkflowImportExportController::class, 'import'])->name('import');
                     Route::post('build', [WorkflowBuilderController::class, 'build'])->name('build');
+                    Route::post('bulk-activate', [WorkflowController::class, 'bulkActivate'])->name('bulk-activate');
+                    Route::post('bulk-deactivate', [WorkflowController::class, 'bulkDeactivate'])->name('bulk-deactivate');
+                    Route::delete('bulk', [WorkflowController::class, 'bulkDestroy'])->name('bulk-destroy');
 
                     Route::prefix('{workflow}')->group(function () {
                         Route::get('/', [WorkflowController::class, 'show'])->name('show');
@@ -269,12 +279,31 @@ Route::prefix('v1')->as('v1.')->group(function () {
                         Route::delete('/', [WorkflowController::class, 'destroy'])->name('destroy');
                         Route::post('activate', [WorkflowController::class, 'activate'])->name('activate');
                         Route::post('deactivate', [WorkflowController::class, 'deactivate'])->name('deactivate');
+                        Route::post('lock', [WorkflowController::class, 'lock'])->name('lock');
+                        Route::post('unlock', [WorkflowController::class, 'unlock'])->name('unlock');
                         Route::post('duplicate', [WorkflowController::class, 'duplicate'])->name('duplicate');
                         Route::post('execute', [ExecutionController::class, 'store'])->middleware('throttle:execution-trigger')->name('execute');
                         Route::get('executions', [ExecutionController::class, 'workflowExecutions'])->name('executions.index');
                         Route::post('webhook', [WebhookController::class, 'store'])->name('webhook.store');
                         Route::post('polling-trigger', [PollingTriggerController::class, 'store'])->name('polling-trigger.store');
                         Route::get('export', [WorkflowImportExportController::class, 'export'])->name('export');
+
+                        // ── Contracts ─────────────────────────────────
+
+                        Route::prefix('contracts')->as('contracts.')->group(function () {
+                            Route::get('/', [WorkflowContractController::class, 'index'])->name('index');
+                            Route::post('generate', [WorkflowContractController::class, 'generate'])->name('generate');
+                            Route::get('{snapshot}', [WorkflowContractController::class, 'show'])->name('show');
+                            Route::get('{snapshot}/test-runs', [WorkflowContractController::class, 'testRuns'])->name('test-runs.index');
+                            Route::post('{snapshot}/test-runs', [WorkflowContractController::class, 'runTest'])->name('test-runs.store');
+                        });
+
+                        // ── Environment Releases ──────────────────────
+
+                        Route::prefix('releases')->as('releases.')->group(function () {
+                            Route::get('/', [WorkflowEnvironmentReleaseController::class, 'index'])->name('index');
+                            Route::post('/', [WorkflowEnvironmentReleaseController::class, 'store'])->name('store');
+                        });
 
                         // ── Versions ─────────────────────────────────
 
@@ -325,6 +354,7 @@ Route::prefix('v1')->as('v1.')->group(function () {
                     Route::put('{credential}', [CredentialController::class, 'update'])->name('update');
                     Route::delete('{credential}', [CredentialController::class, 'destroy'])->name('destroy');
                     Route::post('{credential}/test', [CredentialController::class, 'test'])->name('test');
+                    Route::post('{credential}/share', [CredentialController::class, 'share'])->name('share');
                 });
 
                 // ── Executions ───────────────────────────────────────
@@ -343,6 +373,11 @@ Route::prefix('v1')->as('v1.')->group(function () {
                     Route::post('{execution}/cancel', [ExecutionController::class, 'cancel'])->name('cancel');
                     Route::post('{execution}/replay', [ExecutionController::class, 'replay'])->name('replay');
                     Route::get('{execution}/stream', [SseController::class, 'stream'])->name('stream');
+                    Route::post('{execution}/pause', [ExecutionController::class, 'pause'])->name('pause');
+                    Route::post('{execution}/resume', [ExecutionController::class, 'resume'])->name('resume');
+                    Route::get('{execution}/autofix', [AiAutofixController::class, 'index'])->name('autofix.index');
+                    Route::post('{execution}/autofix', [AiAutofixController::class, 'generate'])->name('autofix.generate');
+                    Route::post('{execution}/autofix/{suggestion}/apply', [AiAutofixController::class, 'apply'])->name('autofix.apply');
 
                     // ── Archived Executions ──────────────────────────
                     Route::prefix('archived')->as('archived.')->group(function () {
@@ -451,6 +486,37 @@ Route::prefix('v1')->as('v1.')->group(function () {
 
                 Route::post('templates/{workflowTemplate}/use', [WorkflowTemplateController::class, 'use'])->name('templates.use');
 
+                // ── Workflow Approvals ───────────────────────────────
+
+                Route::prefix('approvals')->as('approvals.')->group(function () {
+                    Route::get('/', [WorkflowApprovalController::class, 'index'])->name('index');
+                    Route::get('{approval}', [WorkflowApprovalController::class, 'show'])->name('show');
+                    Route::post('{approval}/approve', [WorkflowApprovalController::class, 'approve'])->name('approve');
+                    Route::post('{approval}/reject', [WorkflowApprovalController::class, 'reject'])->name('reject');
+                });
+
+                // ── Environments ─────────────────────────────────────
+
+                Route::prefix('environments')->as('environments.')->group(function () {
+                    Route::get('/', [WorkspaceEnvironmentController::class, 'index'])->name('index');
+                    Route::post('/', [WorkspaceEnvironmentController::class, 'store'])->name('store');
+                    Route::get('{environment}', [WorkspaceEnvironmentController::class, 'show'])->name('show');
+                    Route::put('{environment}', [WorkspaceEnvironmentController::class, 'update'])->name('update');
+                    Route::delete('{environment}', [WorkspaceEnvironmentController::class, 'destroy'])->name('destroy');
+                });
+
+                // ── Connector Metrics ────────────────────────────────
+
+                Route::prefix('connector-metrics')->as('connector-metrics.')->group(function () {
+                    Route::get('/', [ConnectorMetricController::class, 'index'])->name('index');
+                    Route::get('summary', [ConnectorMetricController::class, 'summary'])->name('summary');
+                    Route::get('calls', [ConnectorMetricController::class, 'calls'])->name('calls');
+                });
+
+                // ── Node Sandbox ─────────────────────────────────────
+
+                Route::post('nodes/sandbox', [NodeSandboxController::class, 'execute'])->name('nodes.sandbox');
+
                 // ── Agents ──────────────────────────────────────────
 
                 Route::prefix('agents')->as('agents.')->group(function () {
@@ -540,6 +606,14 @@ Route::prefix('v1')->as('v1.')->group(function () {
         Route::prefix('credential-types')->as('credential-types.')->group(function () {
             Route::get('/', [CredentialTypeController::class, 'index'])->name('index');
             Route::get('{credentialType}', [CredentialTypeController::class, 'show'])->name('show');
+        });
+
+        // ── Template Admin (create / update / delete) ────────────────
+
+        Route::prefix('templates')->as('templates.admin.')->group(function () {
+            Route::post('/', [WorkflowTemplateController::class, 'store'])->name('store');
+            Route::put('{workflowTemplate}', [WorkflowTemplateController::class, 'update'])->name('update');
+            Route::delete('{workflowTemplate}', [WorkflowTemplateController::class, 'destroy'])->name('destroy');
         });
     });
 });

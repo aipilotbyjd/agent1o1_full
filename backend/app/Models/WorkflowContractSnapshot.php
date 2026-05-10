@@ -44,4 +44,12 @@ class WorkflowContractSnapshot extends Model
     {
         return $this->belongsTo(WorkflowVersion::class);
     }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<WorkflowContractTestRun, $this>
+     */
+    public function testRuns(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(WorkflowContractTestRun::class, 'workflow_contract_snapshot_id');
+    }
 }

@@ -43,6 +43,10 @@ class WorkflowController extends Controller
             $query->where('is_active', filter_var($request->input('is_active'), FILTER_VALIDATE_BOOLEAN));
         }
 
+        if ($request->filled('folder_id')) {
+            $query->where('folder_id', $request->integer('folder_id'));
+        }
+
         $query->orderBy(
             $this->sortColumn($request, self::SORTABLE_COLUMNS),
             $this->sortDirection($request),
@@ -147,6 +151,77 @@ class WorkflowController extends Controller
             'Workflow deactivated successfully.',
             new WorkflowResource($workflow),
         );
+    }
+
+    /**
+     * Lock a workflow to prevent edits.
+     */
+    public function lock(Workspace $workspace, Workflow $workflow): JsonResponse
+    {
+        $this->can(Permission::WorkflowUpdate);
+
+        $workflow->update(['is_locked' => true]);
+        $workflow->load('creator');
+
+        return $this->successResponse('Workflow locked successfully.', new WorkflowResource($workflow));
+    }
+
+    /**
+     * Unlock a workflow to allow edits.
+     */
+    public function unlock(Workspace $workspace, Workflow $workflow): JsonResponse
+    {
+        $this->can(Permission::WorkflowUpdate);
+
+        $workflow->update(['is_locked' => false]);
+        $workflow->load('creator');
+
+        return $this->successResponse('Workflow unlocked successfully.', new WorkflowResource($workflow));
+    }
+
+    /**
+     * Bulk activate workflows.
+     */
+    public function bulkActivate(Request $request, Workspace $workspace): JsonResponse
+    {
+        $this->can(Permission::WorkflowActivate);
+
+        $ids = $request->validate(['ids' => ['required', 'array', 'min:1'], 'ids.*' => ['required', 'integer']])['ids'];
+
+        $count = $workspace->workflows()->whereIn('id', $ids)->update(['is_active' => true]);
+
+        return $this->successResponse("Successfully activated {$count} workflow(s).");
+    }
+
+    /**
+     * Bulk deactivate workflows.
+     */
+    public function bulkDeactivate(Request $request, Workspace $workspace): JsonResponse
+    {
+        $this->can(Permission::WorkflowActivate);
+
+        $ids = $request->validate(['ids' => ['required', 'array', 'min:1'], 'ids.*' => ['required', 'integer']])['ids'];
+
+        $count = $workspace->workflows()->whereIn('id', $ids)->update(['is_active' => false]);
+
+        return $this->successResponse("Successfully deactivated {$count} workflow(s).");
+    }
+
+    /**
+     * Bulk delete workflows.
+     */
+    public function bulkDestroy(Request $request, Workspace $workspace): JsonResponse
+    {
+        $this->can(Permission::WorkflowDelete);
+
+        $ids = $request->validate(['ids' => ['required', 'array', 'min:1'], 'ids.*' => ['required', 'integer']])['ids'];
+
+        $workflows = $workspace->workflows()->whereIn('id', $ids)->get();
+        foreach ($workflows as $workflow) {
+            $this->workflowService->delete($workflow);
+        }
+
+        return $this->successResponse("Successfully deleted {$workflows->count()} workflow(s).");
     }
 
     /**

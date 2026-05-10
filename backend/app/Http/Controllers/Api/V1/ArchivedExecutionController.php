@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\Permission;
 use App\Http\Controllers\Controller;
 use App\Models\ArchivedExecutionLog;
 use App\Services\ExecutionArchiveService;
@@ -20,6 +21,8 @@ class ArchivedExecutionController extends Controller
      */
     public function index(Request $request)
     {
+        $this->can(Permission::ExecutionView);
+
         $workspace = $request->attributes->get('workspace');
 
         $query = ArchivedExecutionLog::query()
@@ -81,6 +84,8 @@ class ArchivedExecutionController extends Controller
      */
     public function stats(Request $request)
     {
+        $this->can(Permission::ExecutionView);
+
         $workspace = $request->attributes->get('workspace');
 
         $stats = $this->archiveService->getWorkspaceStats($workspace->id);
@@ -106,6 +111,8 @@ class ArchivedExecutionController extends Controller
      */
     public function show(Request $request, string $executionId)
     {
+        $this->can(Permission::ExecutionView);
+
         $workspace = $request->attributes->get('workspace');
 
         $archive = ArchivedExecutionLog::query()
@@ -148,6 +155,8 @@ class ArchivedExecutionController extends Controller
      */
     public function restore(Request $request, string $executionId)
     {
+        $this->can(Permission::ExecutionRetry);
+
         $workspace = $request->attributes->get('workspace');
 
         $archive = ArchivedExecutionLog::query()
@@ -189,6 +198,8 @@ class ArchivedExecutionController extends Controller
      */
     public function download(Request $request, string $executionId)
     {
+        $this->can(Permission::ExecutionView);
+
         $workspace = $request->attributes->get('workspace');
 
         $archive = ArchivedExecutionLog::query()

@@ -124,4 +124,26 @@ class CredentialController extends Controller
 
         return $this->successResponse($result['message'], $result, $statusCode);
     }
+
+    /**
+     * Share a credential with workflows in a workspace.
+     * Marks the credential as shared so it appears in workflow node credential pickers.
+     */
+    public function share(Request $request, Workspace $workspace, Credential $credential): JsonResponse
+    {
+        $this->can(Permission::CredentialShare);
+
+        $validated = $request->validate([
+            'is_shared' => ['required', 'boolean'],
+        ]);
+
+        $credential->update(['is_shared' => $validated['is_shared']]);
+        $credential->load('creator');
+
+        $message = $validated['is_shared']
+            ? 'Credential is now shared with all workspace workflows.'
+            : 'Credential sharing revoked.';
+
+        return $this->successResponse($message, new CredentialResource($credential));
+    }
 }
