@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "wiki/entities/credential.md",
+                "file": "wiki/raw/workflow-editor-design.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "credential"
+              "title": "workflow-editor-design"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "wiki/entities/credential.md",
+                "file": "wiki/entities/activity-log.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for credential"
+              "title": "Backlinks for activity-log"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "wiki/entities/credential.md",
+                "file": "wiki/entities/activity-log.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from credential"
+              "title": "Outgoing links from activity-log"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "wiki/entities/credential.md",
+                "file": "wiki/entities/activity-log.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of credential"
+              "title": "Outline of activity-log"
             }
           }
         ]
@@ -185,34 +185,46 @@
   },
   "active": "1e65667c791adfca",
   "lastOpenFiles": [
-    "wiki/entities/agent.md",
-    "wiki/entities/activity-log.md",
-    "wiki/concepts/workflow-builder.md",
-    "wiki/concepts/teams-and-permissions.md",
-    "wiki/concepts/notifications.md",
-    "wiki/concepts/log-streaming.md",
-    "wiki/concepts/git-sync.md",
-    "wiki/concepts/execution-engine.md",
-    "wiki/concepts/billing-credits.md",
-    "wiki/concepts/api-coverage.md",
-    "frontend/node_modules/internal-slot/CHANGELOG.md",
-    "wiki/entities/tag.md",
-    "wiki/entities/folder.md",
-    "wiki/tech/frontend.md.tmp.86167.9370d49baaae",
-    "memory-compiler/uv.lock",
-    "memory-compiler/scripts/utils.py",
-    "memory-compiler/scripts/query.py",
-    "memory-compiler/scripts/lint.py",
-    "memory-compiler/scripts/flush.py",
-    "memory-compiler/scripts/config.py",
-    "memory-compiler/scripts/compile.py",
-    "memory-compiler/scripts",
-    "memory-compiler/pyproject.toml",
-    "memory-compiler/README.md",
-    "memory-compiler/AGENTS.md",
-    "wiki/entities/variable.md",
-    "wiki/entities/template.md",
-    "wiki/entities/node.md",
-    "wiki/entities/credential.md"
+    "ai-workflow-editor/workflow-editor/yarn.lock",
+    "ai-workflow-editor/workflow-editor/node_modules/vite/bin/vite.js",
+    "ai-workflow-editor/workflow-editor/node_modules/typescript/bin/tsserver",
+    "ai-workflow-editor/workflow-editor/node_modules/typescript/bin/tsc",
+    "ai-workflow-editor/workflow-editor/node_modules/which/bin/node-which",
+    "ai-workflow-editor/workflow-editor/node_modules/rolldown/bin/cli.mjs",
+    "ai-workflow-editor/workflow-editor/node_modules/nanoid/bin/nanoid.cjs",
+    "ai-workflow-editor/workflow-editor/node_modules/@typescript-eslint/typescript-estree/node_modules/semver/bin/semver.js",
+    "ai-workflow-editor/workflow-editor/node_modules/vite/node_modules",
+    "ai-workflow-editor/workflow-editor/node_modules/update-browserslist-db/node_modules",
+    "ai-workflow-editor/workflow-editor/node_modules/typescript-eslint/node_modules",
+    "ai-workflow-editor/workflow-editor/node_modules/flatted/golang/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/rolldown/node_modules/@rolldown/pluginutils/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/typescript-eslint/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/ts-api-utils/LICENSE.md",
+    "ai-workflow-editor/workflow-editor/node_modules/ts-api-utils/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/scheduler/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/zustand/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/yocto-queue/readme.md",
+    "ai-workflow-editor/workflow-editor/node_modules/yallist/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/which/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/which/CHANGELOG.md",
+    "ai-workflow-editor/workflow-editor/node_modules/use-sync-external-store/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/zod-validation-error/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/zod/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/zod-validation-error/README.v3.md",
+    "ai-workflow-editor/workflow-editor/node_modules/word-wrap/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/uri-js/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/undici-types/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/vite/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/vite/LICENSE.md",
+    "ai-workflow-editor/workflow-editor/node_modules/update-browserslist-db/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/typescript/SECURITY.md",
+    "ai-workflow-editor/workflow-editor/node_modules/type-check/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/typescript/README.md",
+    "ai-workflow-editor/workflow-editor/node_modules/source-map-js/README.md",
+    "ai-workflow-editor/workflow-editor/src/assets/vite.svg",
+    "ai-workflow-editor/workflow-editor/src/assets/react.svg",
+    "ai-workflow-editor/workflow-editor/src/assets/hero.png",
+    "ai-workflow-editor/workflow-editor/public/icons.svg",
+    "ai-workflow-editor/workflow-editor/public/favicon.svg"
   ]
 }
