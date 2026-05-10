@@ -27,7 +27,7 @@ class RunAgentJob implements ShouldQueue
         public readonly string $message,
         public readonly array $context = [],
     ) {
-        $this->onQueue('workflows-default');
+        $this->onQueue('workflows-agents');
     }
 
     public function handle(): void

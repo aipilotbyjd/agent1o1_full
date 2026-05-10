@@ -16,10 +16,12 @@ use App\Engine\Graph\WorkflowGraph;
 use App\Engine\Persistence\BatchWriter;
 use App\Engine\Persistence\CheckpointStore;
 use App\Engine\Sse\SsePublisher;
+use App\Enums\ExecutionMode;
 use App\Enums\ExecutionNodeStatus;
 use App\Events\ExecutionNodeFailed;
 use App\Jobs\ResumeWorkflowJob;
 use App\Models\Execution;
+use App\Models\PinnedNodeData;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 
@@ -41,6 +43,9 @@ use Illuminate\Support\Facades\Redis;
  */
 class WorkflowEngine
 {
+    /** @var array<string, PinnedNodeData> nodeId → PinnedNodeData (loaded once per run) */
+    private array $pinnedData = [];
+
     public function __construct(
         private readonly GraphCompiler $compiler,
         private readonly SyncExecutor $syncExecutor,
@@ -91,6 +96,9 @@ class WorkflowEngine
             variables: $variables,
             credentials: $credentials,
         );
+
+        // Load pinned node data so test/manual runs can bypass live handlers
+        $this->pinnedData = $this->loadPinnedData($execution);
 
         $execution->start();
         $this->ssePublisher->event($execution->id, 'execution.started');
@@ -146,7 +154,14 @@ class WorkflowEngine
             }
         }
 
-        $execution->resume();
+        if (! $execution->resume()) {
+            Log::info("Execution {$execution->id} was already resumed or cancelled — skipping.", [
+                'status' => $execution->status->value,
+            ]);
+
+            return;
+        }
+
         $this->ssePublisher->event($execution->id, 'execution.resumed');
 
         $this->checkpointStore->delete($execution->id);
@@ -219,6 +234,15 @@ class WorkflowEngine
                 // Flush to DB if threshold reached
                 $this->batchWriter->flushIfNeeded($context);
 
+                // Guard against runaway memory from large loop datasets
+                $memoryCapBytes = (int) config('workflow.output_memory_cap_bytes', 512 * 1024 * 1024);
+                if ($context->outputs->memoryUsage() > $memoryCapBytes) {
+                    throw new \RuntimeException(
+                        'Execution output memory limit exceeded (' . round($memoryCapBytes / 1024 / 1024) . ' MB). '
+                        . 'Use batch processing nodes for large datasets.'
+                    );
+                }
+
                 // Check for cancellation
                 if ($this->isCancelled($execution->id)) {
                     $this->batchWriter->flush();
@@ -286,10 +310,36 @@ class WorkflowEngine
             'node_type' => $graph->getNode($nodeId)['type'] ?? 'unknown',
         ]);
 
-        try {
-            $originalResult = $this->syncExecutor->run($nodeId, $graph, $context);
-        } catch (NodeFailedException $e) {
-            $originalResult = NodeResult::failed($e->getMessage(), 'NODE_EXECUTION_ERROR');
+        // Pinned data bypass: in manual runs, substitute live handler output with
+        // the pinned dataset so the user can test downstream nodes without
+        // re-fetching from external APIs.
+        $pinned = $this->pinnedData[$nodeId] ?? null;
+        if ($pinned && $pinned->is_active && $execution->mode === ExecutionMode::Manual) {
+            $originalResult = NodeResult::completed($pinned->data ?? []);
+        } else {
+            // Per-node retry: read retry config from node definition
+            $nodeDef = $graph->getNode($nodeId);
+            $retryConfig = $nodeDef['config']['retry'] ?? $nodeDef['data']['retry'] ?? [];
+            $maxAttempts = max(1, (int) ($retryConfig['max_attempts'] ?? 1));
+            $retryDelayMs = max(0, (int) ($retryConfig['retry_delay_ms'] ?? 0));
+
+            $originalResult = null;
+            for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+                try {
+                    $result = $this->syncExecutor->run($nodeId, $graph, $context);
+                } catch (NodeFailedException $e) {
+                    $result = NodeResult::failed($e->getMessage(), 'NODE_EXECUTION_ERROR');
+                }
+
+                if ($result->status !== ExecutionNodeStatus::Failed || $attempt >= $maxAttempts) {
+                    $originalResult = $result;
+                    break;
+                }
+
+                if ($retryDelayMs > 0) {
+                    usleep($retryDelayMs * 1000);
+                }
+            }
         }
 
         $sequence = $context->nextSequence();
@@ -582,6 +632,20 @@ class WorkflowEngine
         }
 
         return false;
+    }
+
+    /**
+     * Load pinned node data for the workflow, keyed by node ID.
+     *
+     * @return array<string, PinnedNodeData>
+     */
+    private function loadPinnedData(Execution $execution): array
+    {
+        return PinnedNodeData::where('workflow_id', $execution->workflow_id)
+            ->where('is_active', true)
+            ->get()
+            ->keyBy('node_id')
+            ->all();
     }
 
     /**

@@ -34,6 +34,24 @@ class ExecutionService
 
         $workflow->loadMissing('currentVersion');
 
+        // Per-workflow concurrency limit
+        $maxConcurrent = $workflow->max_concurrent_executions ?? 0;
+        if ($maxConcurrent > 0) {
+            $activeCount = $workflow->executions()
+                ->whereIn('status', [
+                    ExecutionStatus::Pending->value,
+                    ExecutionStatus::Running->value,
+                    ExecutionStatus::Waiting->value,
+                ])
+                ->count();
+
+            if ($activeCount >= $maxConcurrent) {
+                throw ApiException::unprocessable(
+                    "Workflow has reached its concurrent execution limit ({$maxConcurrent}). Try again later."
+                );
+            }
+        }
+
         $retrySettings = $workflow->currentVersion->settings['retry'] ?? [];
 
         $execution = Execution::create([
@@ -52,8 +70,16 @@ class ExecutionService
 
         $this->captureReplayPack($execution, $workflow);
 
-        ExecuteWorkflowJob::dispatch($execution)
-            ->onQueue('workflows-default');
+        // Route to the appropriate queue based on trigger mode so high-priority
+        // webhook executions are never blocked by slow scheduled or retry jobs.
+        $queue = match ($mode) {
+            ExecutionMode::Webhook => 'workflows-realtime',
+            ExecutionMode::Schedule, ExecutionMode::Polling => 'workflows-schedule',
+            ExecutionMode::Retry => 'workflows-low',
+            default => 'workflows-default',
+        };
+
+        ExecuteWorkflowJob::dispatch($execution)->onQueue($queue);
 
         return $execution;
     }
@@ -90,9 +116,8 @@ class ExecutionService
 
         $this->captureReplayPack($childExecution, $workflow);
 
-        // Manual retries run immediately on the default queue (user is waiting for a result).
-        ExecuteWorkflowJob::dispatch($childExecution)
-            ->onQueue('workflows-default');
+        // Manual retries run immediately on the default queue (user is waiting for result).
+        ExecuteWorkflowJob::dispatch($childExecution)->onQueue('workflows-default');
 
         return $childExecution;
     }

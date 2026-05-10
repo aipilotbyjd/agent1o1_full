@@ -36,6 +36,7 @@ class Workflow extends Model
         'last_cron_run_at',
         'webhook_status',
         'webhook_status_message',
+        'max_concurrent_executions',
     ];
 
     protected function casts(): array
@@ -44,6 +45,7 @@ class Workflow extends Model
             'is_active' => 'boolean',
             'is_locked' => 'boolean',
             'execution_count' => 'integer',
+            'max_concurrent_executions' => 'integer',
             'last_executed_at' => 'datetime',
             'success_rate' => 'decimal:2',
             'next_run_at' => 'datetime',

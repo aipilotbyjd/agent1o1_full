@@ -29,21 +29,39 @@ class NodeSandboxService
     {
         $temporaryFilename = 'sandbox_' . Str::random(10) . '.js';
         
-        $wrappedCode = "
-            const inputData = " . json_encode($inputData) . ";
-            
-            async function main() {
-                try {
-                    // Inject user code
-                    $code
-                } catch (error) {
-                    console.error('USER_CODE_ERROR:', error.toString());
-                    process.exit(1);
-                }
-            }
-            
-            main();
-        ";
+        // Wrap user code in vm.runInNewContext() so it cannot access require,
+        // process, fs, or any other Node.js global. Only safe builtins are
+        // exposed. The outer script's timeout (Process::setTimeout) is the
+        // hard wall; vm timeout is a softer inner guard.
+        $encodedInput = json_encode($inputData);
+        $encodedCode  = json_encode($code);
+
+        $wrappedCode = <<<JS
+'use strict';
+const vm = require('vm');
+
+const sandbox = {
+    inputData: {$encodedInput},
+    output: undefined,
+    console: {
+        log:   (...a) => process.stdout.write(a.map(String).join(' ') + '\n'),
+        error: (...a) => process.stderr.write(a.map(String).join(' ') + '\n'),
+        warn:  (...a) => process.stderr.write(a.map(String).join(' ') + '\n'),
+    },
+    Math, JSON, Date, Array, Object, String, Number, Boolean, RegExp,
+    parseInt, parseFloat, isNaN, isFinite, encodeURIComponent, decodeURIComponent,
+};
+
+vm.createContext(sandbox);
+
+try {
+    vm.runInContext({$encodedCode}, sandbox, { timeout: 4000 });
+    process.stdout.write(JSON.stringify(sandbox.output ?? sandbox.inputData));
+} catch (e) {
+    process.stderr.write('USER_CODE_ERROR: ' + e.toString());
+    process.exit(1);
+}
+JS;
 
         Storage::disk('local')->put('sandbox/' . $temporaryFilename, $wrappedCode);
         $filePath = Storage::disk('local')->path('sandbox/' . $temporaryFilename);
@@ -55,14 +73,14 @@ class NodeSandboxService
         try {
             $process->mustRun();
             
-            // Try extracting valid JSON from stdout if the user console.logs a JSON object
-            $output = $process->getOutput();
-            // Basic cleanup
             Storage::disk('local')->delete('sandbox/' . $temporaryFilename);
-            
+
+            $raw = trim($process->getOutput());
+            $decoded = json_decode($raw, true);
+
             return [
                 'success' => true,
-                'output' => $output,
+                'output' => is_array($decoded) ? $decoded : ['result' => $raw],
             ];
             
         } catch (ProcessTimedOutException $e) {

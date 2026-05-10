@@ -27,6 +27,15 @@ class SubWorkflowNode implements NodeHandler
                 return NodeResult::failed('No workflow_id configured.', 'SUB_WORKFLOW_MISSING_ID');
             }
 
+            // Guard against infinite sub-workflow chains (A → B → A → …)
+            $currentDepth = (int) ($payload->executionMeta['trigger_data']['__sub_depth'] ?? 0);
+            if ($currentDepth >= 5) {
+                return NodeResult::failed(
+                    'Sub-workflow depth limit reached (max 5 levels).',
+                    'SUB_WORKFLOW_DEPTH_LIMIT'
+                );
+            }
+
             $workflow = Workflow::query()->find($workflowId);
 
             if (! $workflow) {
@@ -42,7 +51,7 @@ class SubWorkflowNode implements NodeHandler
             $execution = $this->executionService->trigger(
                 $workflow,
                 $triggeredBy,
-                $payload->inputData,
+                array_merge($payload->inputData, ['__sub_depth' => $currentDepth + 1]),
                 ExecutionMode::SubWorkflow,
             );
 
