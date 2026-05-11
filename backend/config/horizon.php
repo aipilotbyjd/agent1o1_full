@@ -383,6 +383,43 @@ return [
             ],
         ],
 
+        'staging' => [
+            'supervisor-critical' => [
+                'minProcesses'    => 1,
+                'maxProcesses'    => 3,
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 3,
+            ],
+            'supervisor-workflows' => [
+                'minProcesses'    => 2,
+                'maxProcesses'    => 6,
+                'balanceMaxShift' => 2,
+                'balanceCooldown' => 3,
+            ],
+            'supervisor-long-running' => [
+                'minProcesses'    => 1,
+                'maxProcesses'    => 2,
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 10,
+            ],
+            'supervisor-maintenance' => [
+                'minProcesses'    => 1,
+                'maxProcesses'    => 1,
+            ],
+            'supervisor-notifications' => [
+                'minProcesses'    => 1,
+                'maxProcesses'    => 2,
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 3,
+            ],
+            'supervisor-retries' => [
+                'minProcesses'    => 1,
+                'maxProcesses'    => 2,
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 5,
+            ],
+        ],
+
         'local' => [
             'supervisor-critical' => [
                 'minProcesses' => 1,
