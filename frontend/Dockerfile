@@ -1,7 +1,8 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+RUN corepack enable
+COPY package.json yarn.lock .yarnrc.yml ./
+RUN yarn install --immutable
 COPY . .
 ARG VITE_API_URL=https://api.linkflow.icu
 ENV VITE_API_URL=$VITE_API_URL
