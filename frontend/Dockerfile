@@ -6,7 +6,7 @@ RUN yarn install --immutable
 COPY . .
 ARG VITE_API_URL=https://api.linkflow.icu
 ENV VITE_API_URL=$VITE_API_URL
-RUN yarn build
+RUN yarn vite build
 
 FROM nginx:alpine
 COPY --from=builder /app/build /usr/share/nginx/html
