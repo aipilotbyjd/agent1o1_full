@@ -9,6 +9,9 @@ import colors from './tailwindcss/colors.tailwind';
 const RootWrapper = ({ children }: { children: ReactNode }) => {
 	const { fontSize } = useFontSize();
 	const { isDarkTheme } = useDarkMode();
+	const location = useLocation();
+	const shouldShowToasts = !location.pathname.startsWith('/app/editor');
+
 	return (
 		<>
 			<style>{`:root {font-size: ${fontSize}px;
@@ -21,11 +24,13 @@ const RootWrapper = ({ children }: { children: ReactNode }) => {
 			--toastify-color-progress-light: linear-gradient(to right, ${colors.blue['500']}, ${colors.emerald['500']}, ${colors.amber['500']}, ${colors.red['500']});
 				}`}</style>
 			{children}
-			<ToastContainer
-				theme={isDarkTheme ? 'dark' : 'light'}
-				hideProgressBar
-				// rtl={isRTL}
-			/>
+			{shouldShowToasts && (
+				<ToastContainer
+					theme={isDarkTheme ? 'dark' : 'light'}
+					hideProgressBar
+					// rtl={isRTL}
+				/>
+			)}
 		</>
 	);
 };

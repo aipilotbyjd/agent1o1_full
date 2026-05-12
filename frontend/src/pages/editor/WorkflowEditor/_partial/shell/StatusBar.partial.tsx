@@ -1,6 +1,6 @@
+import { AlertTriangle, CheckCircle2, CircleAlert, GitBranch, Timer } from 'lucide-react';
 import { validateWorkflow } from '../../_helper/validation.helper';
 import { useWorkflowEditor } from '../../_context/WorkflowEditorProvider.context';
-import Icon from '@/components/icon/Icon';
 
 const StatusBar = () => {
 	const { state } = useWorkflowEditor();
@@ -9,31 +9,36 @@ const StatusBar = () => {
 	const warningCount = issues.filter((i) => i.severity === 'warning').length;
 
 	return (
-		<footer className='flex h-8 shrink-0 items-center justify-between border-t border-zinc-200 bg-white px-3 text-xs dark:border-zinc-800 dark:bg-zinc-950'>
+		<footer className='flex h-9 shrink-0 items-center justify-between border-t border-zinc-200 bg-white px-4 text-xs text-zinc-500 dark:border-white/10 dark:bg-zinc-950'>
 			<div className='flex items-center gap-4'>
-				<span className='text-zinc-500 dark:text-zinc-400'>
+				<span className='flex items-center gap-1.5'>
+					<Timer size={13} />
 					{state.workflow.savingState}
 				</span>
 				{errorCount > 0 && (
-					<span className='flex items-center gap-1 text-rose-600 dark:text-rose-400'>
-						<Icon icon='AlertCircle' className='text-xs' />
+					<span className='flex items-center gap-1.5 text-rose-600 dark:text-rose-300'>
+						<CircleAlert size={13} />
 						{errorCount} error{errorCount !== 1 ? 's' : ''}
 					</span>
 				)}
 				{warningCount > 0 && (
-					<span className='flex items-center gap-1 text-amber-600 dark:text-amber-400'>
-						<Icon icon='AlertTriangle' className='text-xs' />
+					<span className='flex items-center gap-1.5 text-amber-600 dark:text-amber-300'>
+						<AlertTriangle size={13} />
 						{warningCount} warning{warningCount !== 1 ? 's' : ''}
 					</span>
 				)}
 				{issues.length === 0 && state.nodes.length > 0 && (
-					<span className='flex items-center gap-1 text-emerald-600 dark:text-emerald-400'>
-						<Icon icon='CheckCircle' className='text-xs' />
+					<span className='flex items-center gap-1.5 text-emerald-600 dark:text-emerald-300'>
+						<CheckCircle2 size={13} />
 						Workflow is valid
 					</span>
 				)}
+				<span className='flex items-center gap-1.5'>
+					<GitBranch size={13} />
+					{state.edges.length} edges
+				</span>
 			</div>
-			<span className='text-zinc-500 dark:text-zinc-400'>{state.workflow.folder}</span>
+			<span>{state.workflow.folder}</span>
 		</footer>
 	);
 };

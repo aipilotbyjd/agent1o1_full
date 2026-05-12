@@ -1,6 +1,7 @@
 import { createContext } from 'react';
 import { HISTORY_LIMIT } from '../_helper/builder.constants';
-import { getNodeDefinition } from '../_helper/nodeCatalog.constants';
+import { getNodeDefinition, NODE_CATALOG_MAP } from '../_helper/nodeCatalog.constants';
+import { makeDemoWorkflow } from '../_helper/demoWorkflow.constants';
 import { autoLayout } from '../_helper/layout.helper';
 import type {
 	TCanvasEdge,
@@ -76,16 +77,19 @@ export const createId = (prefix: string) =>
 
 const initialWorkflow: TWorkflowMeta = {
 	id: 'local',
-	name: 'Untitled Workflow',
-	folder: 'My Workflows',
+	name: 'AI Lead Routing Agent',
+	description: 'Qualify inbound leads, enrich accounts, and route next actions.',
+	folder: 'Revenue Ops',
 	updatedAt: Date.now(),
 	savingState: 'saved',
 };
 
+const demoWorkflow = makeDemoWorkflow(NODE_CATALOG_MAP);
+
 export const initialWorkflowEditorState: TWorkflowEditorState = {
 	workflow: initialWorkflow,
-	nodes: [],
-	edges: [],
+	nodes: demoWorkflow.nodes,
+	edges: demoWorkflow.edges,
 	run: {
 		id: null,
 		status: 'idle',

@@ -16,13 +16,13 @@ const NodeCategorySection = ({
 	const hue = HUE_TO_CLASSES[color] ?? HUE_TO_CLASSES.zinc;
 
 	return (
-		<div className='px-2 py-2'>
+		<div className='px-3 py-3'>
 			<div className='mb-1 flex items-center justify-between px-1'>
-				<span className='text-[11px] font-black tracking-widest text-zinc-500 uppercase dark:text-zinc-400'>
+				<span className='text-[11px] font-semibold tracking-[0.16em] text-zinc-500 uppercase dark:text-zinc-600'>
 					{label}
 				</span>
 				<span
-					className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${hue.bg} ${hue.text} ${hue.darkBg} ${hue.darkText}`}>
+					className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${hue.darkBg} ${hue.darkText}`}>
 					{nodes.length}
 				</span>
 			</div>
@@ -41,16 +41,16 @@ const NodeCategorySection = ({
 							event.dataTransfer.effectAllowed = 'move';
 						}}
 						onClick={() => onAdd(node)}
-						className='group flex w-full cursor-grab items-center gap-2 rounded-lg border border-transparent p-2 text-left transition hover:border-zinc-300 hover:bg-zinc-100 active:cursor-grabbing dark:hover:border-zinc-700 dark:hover:bg-zinc-800'>
+						className='group flex w-full cursor-grab items-center gap-2 rounded-lg border border-transparent p-2 text-left transition hover:border-zinc-200 hover:bg-zinc-50 active:cursor-grabbing dark:hover:border-white/10 dark:hover:bg-white/[0.05]'>
 						<span
-							className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md border text-[10px] font-black ${hue.bg} ${hue.text} ${hue.border} ${hue.darkBg} ${hue.darkText} ${hue.darkBorder}`}>
+							className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md border text-[10px] font-black ${hue.darkBg} ${hue.darkText} ${hue.darkBorder}`}>
 							{node.icon}
 						</span>
 						<span className='min-w-0 flex-1'>
-							<span className='block truncate text-sm font-bold text-zinc-900 dark:text-zinc-100'>
+							<span className='block truncate text-sm font-semibold text-zinc-950 dark:text-zinc-200'>
 								{node.label}
 							</span>
-							<span className='line-clamp-1 text-xs text-zinc-500 dark:text-zinc-400'>
+							<span className='line-clamp-1 text-xs text-zinc-500'>
 								{node.description}
 							</span>
 						</span>

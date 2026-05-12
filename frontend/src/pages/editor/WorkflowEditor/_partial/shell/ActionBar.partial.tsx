@@ -1,15 +1,17 @@
 import { useReactFlow } from '@xyflow/react';
+import { Bot, Command, LayoutGrid, Map, Maximize2, Minus, PanelBottom, Plus } from 'lucide-react';
+import { motion } from 'framer-motion';
+import type { ReactNode } from 'react';
 import { useWorkflowEditor } from '../../_context/WorkflowEditorProvider.context';
-import Icon from '@/components/icon/Icon';
 
 const ToolButton = ({
 	title,
-	icon,
+	children,
 	onClick,
 	active,
 }: {
 	title: string;
-	icon: string;
+	children: ReactNode;
 	onClick: () => void;
 	active?: boolean;
 }) => (
@@ -19,12 +21,12 @@ const ToolButton = ({
 		aria-label={title}
 		onClick={onClick}
 		className={[
-			'flex h-9 w-9 items-center justify-center rounded-lg text-lg transition',
+			'flex h-9 w-9 items-center justify-center rounded-lg transition',
 			active
-				? 'bg-emerald-500 text-white'
-				: 'text-zinc-300 hover:bg-zinc-800 hover:text-white',
+				? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-300/15 dark:text-emerald-100 dark:ring-emerald-300/20'
+				: 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-white/[0.07] dark:hover:text-white',
 		].join(' ')}>
-		<Icon icon={icon} />
+		{children}
 	</button>
 );
 
@@ -33,49 +35,52 @@ const ActionBar = () => {
 	const reactFlow = useReactFlow();
 
 	return (
-		<div className='absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-white/10 bg-zinc-950/90 p-2 shadow-xl backdrop-blur'>
-			<ToolButton
-				title='Zoom out'
-				icon='ZoomOutArea'
-				onClick={() => reactFlow.zoomOut({ duration: 150 })}
-			/>
-			<div className='flex min-w-[3rem] items-center justify-center text-xs font-bold text-zinc-300'>
+		<motion.div
+			initial={{ y: 16, opacity: 0 }}
+			animate={{ y: 0, opacity: 1 }}
+			className='absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-zinc-200 bg-white/90 p-2 shadow-2xl shadow-zinc-200/70 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/90 dark:shadow-black/30'>
+			<ToolButton title='Zoom out' onClick={() => reactFlow.zoomOut({ duration: 150 })}>
+				<Minus size={16} />
+			</ToolButton>
+			<div className='flex min-w-[3.25rem] items-center justify-center rounded-md bg-zinc-100 px-2 py-1 text-xs font-semibold text-zinc-700 dark:bg-white/[0.04] dark:text-zinc-300'>
 				{Math.round(reactFlow.getZoom() * 100)}%
 			</div>
-			<ToolButton
-				title='Zoom in'
-				icon='ZoomInArea'
-				onClick={() => reactFlow.zoomIn({ duration: 150 })}
-			/>
+			<ToolButton title='Zoom in' onClick={() => reactFlow.zoomIn({ duration: 150 })}>
+				<Plus size={16} />
+			</ToolButton>
 			<ToolButton
 				title='Fit view'
-				icon='FitToScreen'
-				onClick={() => reactFlow.fitView({ padding: 0.18, duration: 240 })}
-			/>
-			<ToolButton
-				title='Auto-layout'
-				icon='LayoutGrid'
-				onClick={() => dispatch({ type: 'AUTO_LAYOUT' })}
-			/>
-			<div className='mx-1 h-6 w-px bg-white/10' />
+				onClick={() => reactFlow.fitView({ padding: 0.18, duration: 240 })}>
+				<Maximize2 size={15} />
+			</ToolButton>
+			<ToolButton title='Auto-layout' onClick={() => dispatch({ type: 'AUTO_LAYOUT' })}>
+				<LayoutGrid size={15} />
+			</ToolButton>
+			<div className='mx-1 h-6 w-px bg-zinc-200 dark:bg-white/10' />
 			<ToolButton
 				title='Toggle minimap'
-				icon='Maps'
 				active={state.ui.miniMapOpen}
-				onClick={() => dispatch({ type: 'TOGGLE_MINIMAP' })}
-			/>
+				onClick={() => dispatch({ type: 'TOGGLE_MINIMAP' })}>
+				<Map size={15} />
+			</ToolButton>
 			<ToolButton
 				title='Command palette'
-				icon='Command'
-				onClick={() => dispatch({ type: 'SET_COMMAND_PALETTE', open: true })}
-			/>
+				onClick={() => dispatch({ type: 'SET_COMMAND_PALETTE', open: true })}>
+				<Command size={15} />
+			</ToolButton>
+			<ToolButton
+				title='AI assistant'
+				active={state.ui.aiPanelOpen}
+				onClick={() => dispatch({ type: 'TOGGLE_AI_PANEL' })}>
+				<Bot size={15} />
+			</ToolButton>
 			<ToolButton
 				title='Run console'
-				icon='CommandLine'
 				active={state.ui.runPanelOpen}
-				onClick={() => dispatch({ type: 'TOGGLE_RUN_PANEL' })}
-			/>
-		</div>
+				onClick={() => dispatch({ type: 'TOGGLE_RUN_PANEL' })}>
+				<PanelBottom size={15} />
+			</ToolButton>
+		</motion.div>
 	);
 };
 

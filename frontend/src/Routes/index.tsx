@@ -1,11 +1,10 @@
-import { createBrowserRouter, RouterProvider } from 'react-router';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router';
 import { lazy } from 'react';
 import LoginPage from '@/pages/Login.page';
 import Protected from '@/Protected/Protected';
 import Root from '@/Root';
 import DefaultLayout from '@/layouts/Default.layout';
 import Providers from '@/Providers/Providers';
-import LandingPage from '@/pages/LandingPage/Landing.page';
 import pages from './pages';
 import MailLayout from '@/layouts/Mail.layout';
 import Page404Page from '@/pages/Page404.page';
@@ -63,7 +62,7 @@ const router = createBrowserRouter([
 				children: [
 					{
 						path: '/',
-						element: <LandingPage />,
+						element: <Navigate to={pages.editor.subPages.new.to} replace />,
 					},
 					// Public routes
 					{
@@ -85,6 +84,10 @@ const router = createBrowserRouter([
 					{
 						path: pages.pagesExamples.underConstruction.to,
 						element: <UnderConstructionPage />,
+					},
+					{
+						element: <EditorLayout />,
+						children: [...EditorPages],
 					},
 					{
 						path: '*',
@@ -239,10 +242,6 @@ const router = createBrowserRouter([
 										],
 									},
 								],
-							},
-							{
-								element: <EditorLayout />,
-								children: [...EditorPages],
 							},
 						],
 					},

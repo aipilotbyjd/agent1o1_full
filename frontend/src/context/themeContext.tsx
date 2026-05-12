@@ -32,6 +32,16 @@ export interface IThemeContextProps {
 }
 const ThemeContext = createContext<IThemeContextProps>({} as IThemeContextProps);
 
+const getInitialDarkModeStatus = (): TDarkMode => {
+	if (!localStorage.getItem('agent1o1_editor_theme_defaulted')) {
+		localStorage.setItem('agent1o1_editor_theme_defaulted', 'true');
+		localStorage.setItem('theme', DARK_MODE.LIGHT);
+		return DARK_MODE.LIGHT;
+	}
+
+	return (localStorage.getItem('theme') || DARK_MODE.LIGHT) as TDarkMode;
+};
+
 interface IThemeContextProviderProps {
 	children: ReactNode;
 }
@@ -65,7 +75,7 @@ export const ThemeContextProvider: FC<IThemeContextProviderProps> = ({ children 
 	 * Dark Mode
 	 */
 	const [darkModeStatus, setDarkModeStatus] = useState<TDarkMode | null>(
-		(localStorage.getItem('theme') || DARK_MODE.SYSTEM) as TDarkMode,
+		getInitialDarkModeStatus,
 	);
 	const [isDarkTheme, setIsDarkTheme] = useState<boolean>(darkModeStatus === DARK_MODE.DARK);
 	useLayoutEffect(() => {

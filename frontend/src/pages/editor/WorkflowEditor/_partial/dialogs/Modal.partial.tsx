@@ -1,4 +1,6 @@
-import { ReactNode } from 'react';
+import { X } from 'lucide-react';
+import { motion } from 'framer-motion';
+import type { ReactNode } from 'react';
 
 const Modal = ({
 	title,
@@ -9,21 +11,25 @@ const Modal = ({
 	children: ReactNode;
 	onClose: () => void;
 }) => (
-	<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm'>
-		<div className='w-full max-w-2xl overflow-hidden rounded-2xl border border-zinc-300 bg-white text-zinc-900 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100'>
-			<div className='flex items-center justify-between border-b border-zinc-200 px-5 py-4 dark:border-zinc-800'>
-				<div className='text-sm font-black tracking-widest text-zinc-900 uppercase dark:text-white'>
+	<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm'>
+		<motion.div
+			initial={{ opacity: 0, scale: 0.96, y: 10 }}
+			animate={{ opacity: 1, scale: 1, y: 0 }}
+			transition={{ duration: 0.16 }}
+			className='w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-zinc-950/96 text-zinc-100 shadow-2xl shadow-black/50 backdrop-blur-xl'>
+			<div className='flex items-center justify-between border-b border-white/10 px-5 py-4'>
+				<div className='text-sm font-semibold tracking-[0.16em] text-zinc-400 uppercase'>
 					{title}
 				</div>
 				<button
 					type='button'
 					onClick={onClose}
-					className='rounded-lg border border-zinc-300 px-2 py-1 text-xs text-zinc-600 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:text-white'>
-					Close
+					className='flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-zinc-500 hover:bg-white/[0.06] hover:text-white'>
+					<X size={14} />
 				</button>
 			</div>
 			<div className='p-5'>{children}</div>
-		</div>
+		</motion.div>
 	</div>
 );
 
