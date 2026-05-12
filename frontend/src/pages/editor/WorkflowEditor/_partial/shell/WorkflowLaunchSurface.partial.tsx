@@ -5,11 +5,17 @@ import {
 	Bell,
 	Bot,
 	Cable,
+	CalendarDays,
+	Check,
 	ChevronDown,
 	ChevronLeft,
 	ChevronRight,
 	ChevronsUpDown,
+	Copy,
+	ExternalLink,
+	FolderOpen,
 	Grid2X2,
+	Link2,
 	Maximize,
 	Menu,
 	MessageSquare,
@@ -18,10 +24,13 @@ import {
 	Play,
 	Plus,
 	Save,
+	Search,
 	Settings2,
 	Share2,
 	SlidersHorizontal,
 	Sparkles,
+	Table2,
+	UploadCloud,
 	UserRound,
 	Webhook,
 	Zap,
@@ -56,6 +65,61 @@ const startOptions = [
 	},
 ];
 
+const triggerOptions = [
+	{
+		label: 'Create a Time Trigger',
+		description: 'Schedule this workflow for a date, interval, or recurring window.',
+		icon: CalendarDays,
+		tone: 'rose',
+	},
+	{
+		label: 'Google Drive Folder Reader',
+		description: 'Watch a folder and process newly added files automatically.',
+		icon: FolderOpen,
+		tone: 'blue',
+	},
+	{
+		label: 'Google Sheets Reader',
+		description: 'Read rows from a spreadsheet and run steps for each update.',
+		icon: Table2,
+		tone: 'green',
+	},
+	{
+		label: 'Google Calendar Event Reader',
+		description: 'Trigger from upcoming events, attendees, and meeting windows.',
+		icon: CalendarDays,
+		tone: 'sky',
+	},
+	{
+		label: 'Gmail Reader',
+		description: 'Scan unread emails from a mailbox and extract useful context.',
+		icon: MessageSquare,
+		tone: 'red',
+	},
+	{
+		label: 'Slack Message Reader',
+		description: 'Read recent channel messages and route them into automation.',
+		icon: MessageSquare,
+		tone: 'pink',
+	},
+	{
+		label: 'Teams Message Reader',
+		description: 'Use Teams channel activity as a workflow starting point.',
+		icon: MessageSquare,
+		tone: 'violet',
+	},
+];
+
+const triggerToneClasses: Record<string, string> = {
+	rose: 'border-rose-200 bg-rose-50 text-rose-500',
+	blue: 'border-blue-200 bg-blue-50 text-blue-600',
+	green: 'border-emerald-200 bg-emerald-50 text-emerald-600',
+	sky: 'border-sky-200 bg-sky-50 text-sky-600',
+	red: 'border-red-200 bg-red-50 text-red-600',
+	pink: 'border-pink-200 bg-pink-50 text-pink-600',
+	violet: 'border-violet-200 bg-violet-50 text-violet-600',
+};
+
 const WorkflowLaunchSurface = () => {
 	const toggleMobileSidebar = useWorkflowShellStore((store) => store.toggleMobileSidebar);
 	const fileInputRef = useRef<HTMLInputElement>(null);
@@ -65,8 +129,29 @@ const WorkflowLaunchSurface = () => {
 	const [hasUserEditedPrompt, setHasUserEditedPrompt] = useState(false);
 	const [preferencesOpen, setPreferencesOpen] = useState(false);
 	const [attachedFileName, setAttachedFileName] = useState('');
+	const [surfaceMode, setSurfaceMode] = useState<'launch' | 'interface'>('launch');
+	const [copiedInterfaceUrl, setCopiedInterfaceUrl] = useState(false);
+	const [triggerPickerOpen, setTriggerPickerOpen] = useState(false);
+	const [triggerSearch, setTriggerSearch] = useState('');
+	const [selectedTrigger, setSelectedTrigger] = useState(triggerOptions[0]);
 	const activePrompt = promptExamples[exampleIndex];
 	const actionLabel = useMemo(() => (mode === 'build' ? 'Build workflow' : 'Ask AI'), [mode]);
+	const interfaceUrl = 'https://agent1o1.app/interface/lead-routing-draft';
+	const filteredTriggers = useMemo(
+		() =>
+			triggerOptions.filter((trigger) =>
+				`${trigger.label} ${trigger.description}`
+					.toLowerCase()
+					.includes(triggerSearch.trim().toLowerCase()),
+			),
+		[triggerSearch],
+	);
+
+	const handleCopyInterfaceUrl = async () => {
+		await navigator.clipboard?.writeText(interfaceUrl);
+		setCopiedInterfaceUrl(true);
+		window.setTimeout(() => setCopiedInterfaceUrl(false), 1600);
+	};
 
 	useEffect(() => {
 		if (hasUserEditedPrompt) return undefined;
@@ -131,11 +216,22 @@ const WorkflowLaunchSurface = () => {
 						</div>
 					</div>
 					<div className='hidden h-8 w-px bg-zinc-200 md:block' />
-					<button className='hidden h-9 items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold shadow-xs transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md md:flex'>
+					<button
+						type='button'
+						onClick={() => setSurfaceMode('interface')}
+						className={[
+							'hidden h-9 items-center gap-2 rounded-xl border px-3 text-sm font-semibold shadow-xs transition hover:-translate-y-0.5 hover:shadow-md md:flex',
+							surfaceMode === 'interface'
+								? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+								: 'border-zinc-200 bg-white hover:border-zinc-300',
+						].join(' ')}>
 						<Cable size={17} />
-						Add interface
+						{surfaceMode === 'interface' ? 'Edit interface' : 'Add interface'}
 					</button>
-					<button className='hidden h-9 items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold shadow-xs transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md md:flex'>
+					<button
+						type='button'
+						onClick={() => setTriggerPickerOpen(true)}
+						className='hidden h-9 items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold shadow-xs transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md md:flex'>
 						<Zap size={17} />
 						Add trigger
 					</button>
@@ -172,7 +268,10 @@ const WorkflowLaunchSurface = () => {
 				</motion.div>
 			</div>
 
-			<button className='absolute top-24 left-4 z-20 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 transition hover:-translate-y-0.5 hover:bg-emerald-600 sm:top-26 sm:left-5 sm:h-12 sm:w-12'>
+			<button
+				type='button'
+				onClick={() => setSurfaceMode('interface')}
+				className='absolute top-24 left-4 z-20 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 transition hover:-translate-y-0.5 hover:bg-emerald-600 sm:top-26 sm:left-5 sm:h-12 sm:w-12'>
 				<Plus size={20} />
 			</button>
 			<button className='absolute top-24 right-4 z-20 flex h-11 w-11 items-center justify-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 shadow-sm transition hover:text-zinc-950 hover:shadow-md sm:top-26 sm:right-5 sm:h-12 sm:w-12'>
@@ -183,13 +282,40 @@ const WorkflowLaunchSurface = () => {
 			</button>
 
 			<div className='flex min-h-0 flex-1 items-center justify-center px-4 pt-14 pb-22 sm:px-6 sm:pt-10 lg:px-8 lg:pb-24'>
-				<motion.div
-					initial={{ scale: 0.96, opacity: 0, y: 18 }}
-					animate={{ scale: 1, opacity: 1, y: 0 }}
-					transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-					className='w-full max-w-[760px]'>
-					<div className='rounded-[24px] bg-[linear-gradient(120deg,rgba(16,185,129,0.25),rgba(14,165,233,0.18),rgba(236,72,153,0.22))] p-1 shadow-xl shadow-zinc-300/70 sm:rounded-[28px]'>
+				{surfaceMode === 'launch' ? (
+					<motion.div
+						key='workflow-launch'
+						initial={{ scale: 0.96, opacity: 0, y: 18 }}
+						animate={{ scale: 1, opacity: 1, y: 0 }}
+						transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+						className='w-full max-w-[760px]'>
+						<div className='rounded-[24px] bg-[linear-gradient(120deg,rgba(16,185,129,0.25),rgba(14,165,233,0.18),rgba(236,72,153,0.22))] p-1 shadow-xl shadow-zinc-300/70 sm:rounded-[28px]'>
 						<div className='overflow-hidden rounded-[20px] border border-zinc-200 bg-white shadow-[inset_0_-1px_0_rgba(24,24,27,0.04)] sm:rounded-[24px]'>
+							{selectedTrigger && (
+								<div className='flex items-center gap-3 border-b border-zinc-100 bg-zinc-50/70 px-5 py-3 sm:px-6'>
+									<div
+										className={[
+											'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border',
+											triggerToneClasses[selectedTrigger.tone],
+										].join(' ')}>
+										<selectedTrigger.icon size={17} />
+									</div>
+									<div className='min-w-0 flex-1'>
+										<div className='truncate text-sm font-bold text-zinc-900'>
+											{selectedTrigger.label}
+										</div>
+										<div className='truncate text-xs font-medium text-zinc-500'>
+											Trigger attached
+										</div>
+									</div>
+									<button
+										type='button'
+										onClick={() => setTriggerPickerOpen(true)}
+										className='rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-bold text-zinc-600 shadow-xs transition hover:bg-zinc-50'>
+										Change
+									</button>
+								</div>
+							)}
 							<div className='relative min-h-36 px-5 pt-5 pb-4 sm:min-h-38 sm:px-6 sm:pt-6'>
 								<textarea
 									aria-label='Workflow prompt'
@@ -322,6 +448,7 @@ const WorkflowLaunchSurface = () => {
 							return (
 								<button
 									key={option.label}
+									onClick={() => setTriggerPickerOpen(option.label.includes('trigger'))}
 									className='group flex w-34 flex-col items-center text-center transition hover:-translate-y-1 sm:w-40'>
 									<div className='flex h-14 w-14 items-center justify-center rounded-2xl border border-zinc-200 bg-white shadow-sm transition group-hover:border-zinc-300 group-hover:shadow-xl group-hover:shadow-zinc-200/80 sm:h-16 sm:w-16'>
 										<Icon size={25} className={option.accent} />
@@ -337,7 +464,214 @@ const WorkflowLaunchSurface = () => {
 						})}
 					</div>
 				</motion.div>
+				) : (
+					<motion.div
+						key='interface-editor'
+						initial={{ scale: 0.96, opacity: 0, y: 18 }}
+						animate={{ scale: 1, opacity: 1, y: 0 }}
+						transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+						className='w-full max-w-[680px]'>
+						<div className='overflow-hidden rounded-[28px] border border-zinc-200 bg-white shadow-2xl shadow-zinc-300/70'>
+							<div className='border-b border-zinc-200 bg-zinc-50/80 px-6 py-7 text-center sm:px-8 sm:py-9'>
+								<div className='mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-zinc-950 shadow-sm ring-1 ring-zinc-200'>
+									<UploadCloud size={30} strokeWidth={2.2} />
+								</div>
+								<h2 className='text-2xl font-bold tracking-tight text-zinc-950 sm:text-3xl'>
+									Edit interface
+								</h2>
+								<p className='mx-auto mt-2 max-w-md text-sm font-medium text-zinc-500 sm:text-base'>
+									Create a shareable front door for this workflow with a focused form
+									and branded entry point.
+								</p>
+							</div>
+
+							<div className='p-5 sm:p-7'>
+								<div className='grid gap-5 sm:grid-cols-[120px_1fr] sm:items-start'>
+									<button
+										type='button'
+										className='group flex h-24 w-24 flex-col items-center justify-center rounded-3xl border border-zinc-200 bg-zinc-50 text-sm font-bold text-zinc-500 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-md sm:h-28 sm:w-28'>
+										<UploadCloud
+											size={23}
+											className='mb-2 transition group-hover:-translate-y-0.5'
+										/>
+										Upload icon
+									</button>
+
+									<div className='min-w-0 space-y-3'>
+										<input
+											aria-label='Interface title'
+											defaultValue='Lead intake portal'
+											className='w-full border-0 bg-transparent p-0 text-3xl font-bold tracking-tight text-zinc-950 outline-none placeholder:text-zinc-300 focus:ring-0 sm:text-4xl'
+											placeholder='Interface title'
+										/>
+										<textarea
+											aria-label='Interface description'
+											defaultValue='Collect lead context, qualify intent, and route the request into your workflow.'
+											className='h-16 w-full resize-none border-0 bg-transparent p-0 text-base leading-6 font-medium text-zinc-500 outline-none focus:ring-0 sm:text-lg'
+											placeholder='Add description...'
+										/>
+									</div>
+								</div>
+
+								<div className='mt-8 rounded-2xl border border-zinc-200 bg-zinc-50/70 p-2'>
+									<div className='flex min-h-13 items-center gap-3 rounded-xl bg-white px-3 shadow-xs'>
+										<Link2 size={19} className='shrink-0 text-zinc-400' />
+										<div className='min-w-0 flex-1 truncate text-sm font-semibold text-zinc-500 sm:text-base'>
+											{interfaceUrl}
+										</div>
+										<button
+											type='button'
+											onClick={handleCopyInterfaceUrl}
+											className='flex h-9 shrink-0 items-center gap-2 rounded-xl border border-zinc-200 px-3 text-sm font-bold text-zinc-700 transition hover:bg-zinc-50'>
+											{copiedInterfaceUrl ? <Check size={16} /> : <Copy size={16} />}
+											<span className='hidden sm:inline'>
+												{copiedInterfaceUrl ? 'Copied' : 'Copy'}
+											</span>
+										</button>
+									</div>
+								</div>
+
+								<div className='mt-5 grid gap-3 sm:grid-cols-3'>
+									{[
+										['Fields', 'Name, email, company'],
+										['Theme', 'Light, clean, branded'],
+										['Status', 'Draft interface'],
+									].map(([label, value]) => (
+										<div
+											key={label}
+											className='rounded-2xl border border-zinc-200 bg-white p-4 shadow-xs'>
+											<div className='text-xs font-bold tracking-wide text-zinc-400 uppercase'>
+												{label}
+											</div>
+											<div className='mt-2 text-sm font-bold text-zinc-800'>{value}</div>
+										</div>
+									))}
+								</div>
+
+								<div className='mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between'>
+									<button
+										type='button'
+										onClick={() => setSurfaceMode('launch')}
+										className='h-11 rounded-2xl border border-zinc-200 bg-white px-5 text-sm font-bold text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-950'>
+										Back to workflow
+									</button>
+									<div className='flex gap-3'>
+										<button className='h-11 flex-1 rounded-2xl border border-zinc-200 bg-white px-5 text-sm font-bold text-zinc-700 transition hover:bg-zinc-50 sm:flex-none'>
+											<ExternalLink size={16} className='mr-2 inline' />
+											Preview
+										</button>
+										<button className='h-11 flex-1 rounded-2xl bg-emerald-500 px-5 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 transition hover:-translate-y-0.5 hover:bg-emerald-600 sm:flex-none'>
+											Save interface
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</motion.div>
+				)}
 			</div>
+			{triggerPickerOpen && (
+				<div className='absolute inset-0 z-40 bg-zinc-950/10 backdrop-blur-[1px]'>
+					<motion.div
+						initial={{ opacity: 0, x: -24, scale: 0.98 }}
+						animate={{ opacity: 1, x: 0, scale: 1 }}
+						exit={{ opacity: 0, x: -24, scale: 0.98 }}
+						transition={{ duration: 0.2 }}
+						className='absolute top-20 left-3 flex max-h-[calc(100%-7rem)] w-[min(92vw,520px)] flex-col overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-2xl shadow-zinc-300/80 sm:top-24 sm:left-6'>
+						<div className='flex items-center justify-between border-b border-zinc-100 px-4 py-4 sm:px-5'>
+							<div className='flex items-center gap-3'>
+								<button
+									type='button'
+									onClick={() => setTriggerPickerOpen(false)}
+									className='flex h-10 w-10 items-center justify-center rounded-2xl text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-950'>
+									<ChevronLeft size={21} />
+								</button>
+								<div className='flex h-11 w-11 items-center justify-center rounded-2xl border border-zinc-200 bg-white text-zinc-950 shadow-xs'>
+									<Zap size={20} />
+								</div>
+								<div>
+									<div className='text-lg font-bold tracking-tight text-zinc-950'>
+										Triggers
+									</div>
+									<div className='text-xs font-semibold text-zinc-400'>
+										Choose how this workflow starts
+									</div>
+								</div>
+							</div>
+							<button
+								type='button'
+								onClick={() => setTriggerPickerOpen(false)}
+								className='flex h-10 w-10 items-center justify-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 shadow-xs transition hover:bg-zinc-50 hover:text-zinc-950'>
+								<Plus size={18} className='rotate-45' />
+							</button>
+						</div>
+
+						<div className='border-b border-zinc-100 p-4 sm:p-5'>
+							<label className='flex h-12 items-center gap-3 rounded-2xl border border-zinc-300 bg-white px-4 shadow-xs focus-within:border-emerald-300 focus-within:ring-4 focus-within:ring-emerald-100'>
+								<Search size={20} className='text-zinc-400' />
+								<input
+									value={triggerSearch}
+									onChange={(event) => setTriggerSearch(event.target.value)}
+									placeholder='Search triggers'
+									className='min-w-0 flex-1 border-0 bg-transparent text-base font-medium text-zinc-800 outline-none placeholder:text-zinc-400 focus:ring-0'
+									autoFocus
+								/>
+							</label>
+						</div>
+
+						<div className='min-h-0 flex-1 overflow-y-auto p-3 sm:p-4'>
+							{filteredTriggers.map((trigger, index) => {
+								const Icon = trigger.icon;
+								const isSelected = selectedTrigger.label === trigger.label;
+								return (
+									<button
+										key={trigger.label}
+										type='button'
+										onClick={() => {
+											setSelectedTrigger(trigger);
+											setTriggerPickerOpen(false);
+											setSurfaceMode('launch');
+										}}
+										className={[
+											'group flex w-full gap-4 rounded-2xl p-3 text-left transition hover:bg-zinc-50',
+											index === 0 ? 'bg-rose-50/75' : '',
+											isSelected ? 'ring-2 ring-emerald-200' : '',
+										].join(' ')}>
+										<div
+											className={[
+												'flex h-15 w-15 shrink-0 items-center justify-center rounded-2xl border transition group-hover:scale-[1.03]',
+												triggerToneClasses[trigger.tone],
+											].join(' ')}>
+											<Icon size={27} />
+										</div>
+										<div className='min-w-0 pt-1'>
+											<div className='text-base font-bold text-zinc-950 sm:text-lg'>
+												{trigger.label}
+											</div>
+											<div className='mt-1 line-clamp-2 text-sm leading-5 font-medium text-zinc-500 sm:text-base sm:leading-6'>
+												{trigger.description}
+											</div>
+										</div>
+									</button>
+								);
+							})}
+							{filteredTriggers.length === 0 && (
+								<div className='py-12 text-center'>
+									<div className='mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-400'>
+										<Search size={20} />
+									</div>
+									<div className='mt-3 text-sm font-bold text-zinc-700'>
+										No triggers found
+									</div>
+									<div className='mt-1 text-sm font-medium text-zinc-400'>
+										Try searching for Gmail, Sheets, calendar, or time.
+									</div>
+								</div>
+							)}
+						</div>
+					</motion.div>
+				</div>
+			)}
 
 			<div className='pointer-events-none absolute right-4 bottom-20 left-4 z-20 flex items-end justify-between sm:right-6 sm:bottom-24 sm:left-6'>
 				<button className='pointer-events-auto flex h-11 items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 text-sm font-bold text-emerald-600 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:h-12 sm:px-5'>
