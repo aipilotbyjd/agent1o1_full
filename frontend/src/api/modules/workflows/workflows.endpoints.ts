@@ -26,6 +26,8 @@ export const WorkflowEditorEndpoints = {
 		`/workspaces/${ws}/workflows/${id}/versions/${version}/rollback`,
 	compareVersions: (ws: string, id: string) => `/workspaces/${ws}/workflows/${id}/versions/diff`,
 	build: (ws: string) => `/workspaces/${ws}/workflows/build`,
+	testNode: (ws: string) => `/workspaces/${ws}/workflows/test-node`,
+	clone: (ws: string, id: string) => `/workspaces/${ws}/workflows/${id}/clone`,
 	pinnedDataList: (ws: string, id: string) => `/workspaces/${ws}/workflows/${id}/pinned-data`,
 	pinnedDataCreate: (ws: string, id: string) => `/workspaces/${ws}/workflows/${id}/pinned-data`,
 	pinnedDataToggle: (ws: string, id: string, pinnedDataId: string) =>

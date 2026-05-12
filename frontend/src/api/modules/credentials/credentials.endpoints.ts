@@ -5,9 +5,16 @@ export const CredentialEndpoints = {
 	update: (ws: string, id: string) => `/workspaces/${ws}/credentials/${id}`,
 	delete: (ws: string, id: string) => `/workspaces/${ws}/credentials/${id}`,
 	test: (ws: string, id: string) => `/workspaces/${ws}/credentials/${id}/test`,
+	refreshToken: (ws: string, id: string) => `/workspaces/${ws}/credentials/${id}/refresh`,
+	share: (ws: string, id: string) => `/workspaces/${ws}/credentials/${id}/shares`,
+	unshare: (ws: string, id: string, userId: string) =>
+		`/workspaces/${ws}/credentials/${id}/shares/${userId}`,
+	sharingScope: (ws: string, id: string) => `/workspaces/${ws}/credentials/${id}/sharing-scope`,
 } as const;
 
 export const OAuthEndpoints = {
+	providers: () => '/oauth/providers',
+	authorizeUrl: (ws: string) => `/workspaces/${ws}/oauth/authorize-url`,
 	initiate: (ws: string) => `/workspaces/${ws}/oauth/initiate`,
 	callback: () => `/oauth/callback`,
 } as const;

@@ -28,6 +28,17 @@ export const WorkflowEditorService = {
 			.post<TApiResponse<IWorkflowValidationResult>>(E.build(ws), { nodes, connections })
 			.then(unwrap<IWorkflowValidationResult>),
 
+	validate: (ws: string, nodes: IWorkflowNode[], connections: IWorkflowConnection[]) =>
+		WorkflowEditorService.build(ws, nodes, connections),
+
+	testNode: (ws: string, body: ITestNodeDto) =>
+		axiosClient
+			.post<TApiResponse<ITestNodeResult>>(E.testNode(ws), body)
+			.then(unwrap<ITestNodeResult>),
+
+	clone: (ws: string, id: string, body: ICloneWorkflowDto) =>
+		axiosClient.post<TApiResponse<IWorkflow>>(E.clone(ws, id), body).then(unwrap<IWorkflow>),
+
 	listVersions: (ws: string, workflowId: string, signal?: AbortSignal) =>
 		axiosClient
 			.get<TPaginatedResponse<IWorkflowVersion>>(E.versions(ws, workflowId), { signal })

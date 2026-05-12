@@ -1,5 +1,6 @@
 // @start-snippet:: mapWorldExampleSource
 import WorldMap from 'react-svg-worldmap';
+import type { ISOCode } from 'react-svg-worldmap';
 import colors from '@/tailwindcss/colors.tailwind';
 import useDarkMode from '@/hooks/useDarkMode';
 import Card, { CardBody, CardHeader, CardHeaderChild, CardTitle } from '@/components/ui/Card';
@@ -27,7 +28,7 @@ const columnHelper = createColumnHelper<IOrderProducts>();
 const MapWorldExample = () => {
 	const { isDarkTheme } = useDarkMode();
 
-	const dataMap = [
+	const dataMap: { country: ISOCode; value: number }[] = [
 		{ country: 'us', value: 17543 },
 		{ country: 'in', value: 12482 },
 		{ country: 'br', value: 9521 },

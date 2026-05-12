@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
 	ArrowUp,
@@ -58,14 +58,21 @@ const startOptions = [
 
 const WorkflowLaunchSurface = () => {
 	const toggleMobileSidebar = useWorkflowShellStore((store) => store.toggleMobileSidebar);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [mode, setMode] = useState<'build' | 'ask'>('ask');
 	const [exampleIndex, setExampleIndex] = useState(0);
 	const [typedText, setTypedText] = useState('');
+	const [hasUserEditedPrompt, setHasUserEditedPrompt] = useState(false);
+	const [preferencesOpen, setPreferencesOpen] = useState(false);
+	const [attachedFileName, setAttachedFileName] = useState('');
 	const activePrompt = promptExamples[exampleIndex];
 	const actionLabel = useMemo(() => (mode === 'build' ? 'Build workflow' : 'Ask AI'), [mode]);
 
 	useEffect(() => {
+		if (hasUserEditedPrompt) return undefined;
+
 		let charIndex = 0;
+		let cycleTimer: number | undefined;
 		setTypedText('');
 
 		const typingTimer = window.setInterval(() => {
@@ -74,15 +81,18 @@ const WorkflowLaunchSurface = () => {
 
 			if (charIndex >= activePrompt.length) {
 				window.clearInterval(typingTimer);
-				window.setTimeout(
+				cycleTimer = window.setTimeout(
 					() => setExampleIndex((current) => (current + 1) % promptExamples.length),
 					2200,
 				);
 			}
 		}, 24);
 
-		return () => window.clearInterval(typingTimer);
-	}, [activePrompt]);
+		return () => {
+			window.clearInterval(typingTimer);
+			if (cycleTimer) window.clearTimeout(cycleTimer);
+		};
+	}, [activePrompt, hasUserEditedPrompt]);
 
 	return (
 	<div className='relative flex min-w-0 flex-1 overflow-hidden bg-[#fbfbfc] text-zinc-950'>
@@ -180,25 +190,79 @@ const WorkflowLaunchSurface = () => {
 					className='w-full max-w-[760px]'>
 					<div className='rounded-[24px] bg-[linear-gradient(120deg,rgba(16,185,129,0.25),rgba(14,165,233,0.18),rgba(236,72,153,0.22))] p-1 shadow-xl shadow-zinc-300/70 sm:rounded-[28px]'>
 						<div className='overflow-hidden rounded-[20px] border border-zinc-200 bg-white shadow-[inset_0_-1px_0_rgba(24,24,27,0.04)] sm:rounded-[24px]'>
-							<div className='min-h-36 px-5 pt-5 pb-4 sm:min-h-38 sm:px-6 sm:pt-6'>
-								<div className='max-w-[680px] text-lg leading-7 font-medium text-zinc-600 sm:text-xl sm:leading-8 lg:text-[22px]'>
-									{typedText}
-									<span className='ml-0.5 inline-block h-6 w-px translate-y-1 bg-zinc-500/70' />
-									{typedText.length > 24 && (
-										<span className='ml-2 rounded-lg border border-zinc-200 bg-white px-2 py-0.5 text-xs font-semibold text-zinc-500 shadow-xs sm:text-sm'>
-											Tab
-										</span>
-									)}
-								</div>
+							<div className='relative min-h-36 px-5 pt-5 pb-4 sm:min-h-38 sm:px-6 sm:pt-6'>
+								<textarea
+									aria-label='Workflow prompt'
+									value={typedText}
+									onFocus={() => setHasUserEditedPrompt(true)}
+									onChange={(event) => {
+										setHasUserEditedPrompt(true);
+										setTypedText(event.target.value);
+									}}
+									placeholder='Describe the workflow you want to build...'
+									className='h-24 w-full resize-none appearance-none border-0 bg-transparent pr-14 text-lg leading-7 font-medium text-zinc-600 outline-none ring-0 placeholder:text-zinc-400 focus:border-0 focus:outline-none focus:ring-0 sm:text-xl sm:leading-8 lg:text-[22px]'
+								/>
+								{!hasUserEditedPrompt && typedText.length > 24 && (
+									<div className='pointer-events-none absolute top-5 right-5 rounded-lg border border-zinc-200 bg-white px-2 py-0.5 text-xs font-semibold text-zinc-500 shadow-xs sm:text-sm'>
+										Tab
+									</div>
+								)}
+								{attachedFileName && (
+									<div className='mt-2 inline-flex max-w-full items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700'>
+										<span className='truncate'>{attachedFileName}</span>
+									</div>
+								)}
+								<input
+									ref={fileInputRef}
+									type='file'
+									className='hidden'
+									onChange={(event) =>
+										setAttachedFileName(event.target.files?.[0]?.name ?? '')
+									}
+								/>
 							</div>
 							<div className='flex items-center justify-between gap-3 px-5 pb-5 sm:px-6'>
-								<div className='flex min-w-0 items-center gap-1.5 sm:gap-2'>
-									<button className='flex h-9 w-9 items-center justify-center rounded-xl text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-950'>
+								<div className='relative flex min-w-0 items-center gap-1.5 sm:gap-2'>
+									<button
+										type='button'
+										onClick={() => fileInputRef.current?.click()}
+										className='flex h-9 w-9 items-center justify-center rounded-xl text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-950'
+										title='Attach file'>
 										<Paperclip size={17} />
 									</button>
-									<button className='flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-500 shadow-xs transition hover:text-zinc-950'>
+									<button
+										type='button'
+										onClick={() => setPreferencesOpen((open) => !open)}
+										className='flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-500 shadow-xs transition hover:text-zinc-950'
+										title='Workflow preferences'>
 										<SlidersHorizontal size={16} />
 									</button>
+									{preferencesOpen && (
+										<motion.div
+											initial={{ opacity: 0, y: 8, scale: 0.96 }}
+											animate={{ opacity: 1, y: 0, scale: 1 }}
+											className='absolute bottom-12 left-0 z-30 w-64 rounded-2xl border border-zinc-200 bg-white p-3 text-left shadow-2xl shadow-zinc-300/70'>
+											<div className='mb-2 px-1 text-xs font-bold tracking-wide text-zinc-400 uppercase'>
+												Preferences
+											</div>
+											{[
+												'Use reliable steps',
+												'Ask before publishing',
+												'Show advanced nodes',
+											].map((preference, index) => (
+												<label
+													key={preference}
+													className='flex cursor-pointer items-center justify-between rounded-xl px-2 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50'>
+													<span>{preference}</span>
+													<input
+														type='checkbox'
+														defaultChecked={index < 2}
+														className='h-4 w-4 accent-emerald-500'
+													/>
+												</label>
+											))}
+										</motion.div>
+									)}
 									{quickSteps.map((step) => {
 										const Icon = step.icon;
 										return (
