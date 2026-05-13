@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Workflow extends Model
@@ -133,6 +134,14 @@ class Workflow extends Model
     public function pollingTriggers(): HasMany
     {
         return $this->hasMany(PollingTrigger::class);
+    }
+
+    /**
+     * @return HasOne<Trigger, $this>
+     */
+    public function trigger(): HasOne
+    {
+        return $this->hasOne(Trigger::class);
     }
 
     /**

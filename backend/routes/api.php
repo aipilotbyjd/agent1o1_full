@@ -48,6 +48,8 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\NotificationPreferenceController;
 use App\Http\Controllers\Api\V1\OAuthCredentialController;
 use App\Http\Controllers\Api\V1\PinnedNodeDataController;
+use App\Http\Controllers\Api\V1\TriggerController;
+use App\Http\Controllers\Api\V1\TriggerWebhookController;
 use App\Http\Controllers\Api\V1\PollingTriggerController;
 use App\Http\Controllers\Api\V1\SseController;
 use App\Http\Controllers\Api\V1\StickyNoteController;
@@ -106,6 +108,13 @@ Route::prefix('v1')->as('v1.')->group(function () {
 
     Route::post('git-sync/webhook/{workspaceSlug}', [GitSyncWebhookController::class, 'handle'])
         ->name('git-sync.webhook');
+
+    Route::post('webhooks/{webhookUuid}', [TriggerWebhookController::class, 'receive'])
+        ->middleware(['throttle:webhook-receive', 'ip.allowlist'])
+        ->name('trigger.webhook.receive');
+
+    Route::get('webhooks/{webhookUuid}/health', [TriggerWebhookController::class, 'healthCheck'])
+        ->name('trigger.webhook.health');
 
     // ── Shared Workflows (public viewing) ───────────────────────
     Route::get('shared/{token}', [WorkflowShareController::class, 'viewPublic'])->name('shared.view');
@@ -286,6 +295,21 @@ Route::prefix('v1')->as('v1.')->group(function () {
                         Route::get('executions', [ExecutionController::class, 'workflowExecutions'])->name('executions.index');
                         Route::post('webhook', [WebhookController::class, 'store'])->name('webhook.store');
                         Route::post('polling-trigger', [PollingTriggerController::class, 'store'])->name('polling-trigger.store');
+
+                        // ── New Trigger System ────────────────────────
+                        Route::prefix('trigger')->as('trigger.')->group(function () {
+                            Route::get('available', [TriggerController::class, 'getAvailable'])->name('available');
+                            Route::post('/', [TriggerController::class, 'store'])->name('store');
+                            Route::get('/', fn () => response()->json(['data' => []]))->name('show'); // Would be for showing current trigger
+                            Route::put('/{trigger}', [TriggerController::class, 'update'])->name('update');
+                            Route::delete('/{trigger}', [TriggerController::class, 'destroy'])->name('destroy');
+                            Route::post('/{trigger}/publish', [TriggerController::class, 'publish'])->name('publish');
+                            Route::post('/{trigger}/unpublish', [TriggerController::class, 'unpublish'])->name('unpublish');
+                            Route::get('/{trigger}/executions', [TriggerController::class, 'executions'])->name('executions.index');
+                            Route::put('/{trigger}/polling-interval', [TriggerController::class, 'setPollingInterval'])->name('polling-interval.update');
+                            Route::put('/{trigger}/schedule', [TriggerController::class, 'setSchedule'])->name('schedule.update');
+                        });
+
                         Route::get('export', [WorkflowImportExportController::class, 'export'])->name('export');
 
                         // ── Contracts ─────────────────────────────────

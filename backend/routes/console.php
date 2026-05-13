@@ -23,3 +23,10 @@ Schedule::command('admin:health-check')->everyFiveMinutes();
 // Proactively refresh OAuth credentials expiring within 7 days.
 // Runs as a queued job on the maintenance queue to avoid blocking the scheduler.
 Schedule::job(new \App\Jobs\RefreshOAuthTokenJob())->dailyAt('01:00');
+
+// New trigger system scheduling
+// Poll triggers that need checking (webhook dedup, API polling, etc.)
+Schedule::job(new \App\Jobs\PollTriggersJob())->everyMinute();
+
+// Check scheduled triggers (cron, daily, weekly, monthly)
+Schedule::job(new \App\Jobs\CheckScheduledTriggersJob())->everyMinute();

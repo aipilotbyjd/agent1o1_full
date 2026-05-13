@@ -25,6 +25,9 @@ class DatabaseSeeder extends Seeder
             NodeSeeder::class,
             CredentialTypeSeeder::class,
             OitWorkspaceSeeder::class,
+            TriggerCategorySeeder::class,
+            TriggerTypeSeeder::class,
+            TriggerTypeFieldSeeder::class,
         ]);
     }
 }

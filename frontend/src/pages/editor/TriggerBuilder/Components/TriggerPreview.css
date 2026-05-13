@@ -1,0 +1,116 @@
+.trigger-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.trigger-preview__header h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.trigger-preview__header p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.trigger-preview__card {
+  padding: 20px;
+  background: var(--color-bg-secondary, #f9fafb);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.trigger-preview__category {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.trigger-preview__name {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-primary, #111827);
+}
+
+.trigger-preview__description {
+  font-size: 13px;
+  color: var(--color-text-secondary, #6b7280);
+  line-height: 1.5;
+}
+
+.trigger-preview__section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trigger-preview__section h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-tertiary, #9ca3af);
+}
+
+.trigger-preview__config {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trigger-preview__config-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.trigger-preview__config-label {
+  font-weight: 500;
+  color: var(--color-text-secondary, #6b7280);
+  min-width: 120px;
+}
+
+.trigger-preview__config-value {
+  color: var(--color-text-primary, #111827);
+  font-weight: 500;
+  text-align: right;
+  flex: 1;
+  word-break: break-word;
+}
+
+.trigger-preview__badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.trigger-preview__badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--color-bg-tertiary, #f3f4f6);
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.trigger-preview__badge--instant {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--color-primary, #3b82f6);
+}
+
+.trigger-preview__badge--polling {
+  background: rgba(249, 115, 22, 0.1);
+  color: var(--color-warning, #f97316);
+}
