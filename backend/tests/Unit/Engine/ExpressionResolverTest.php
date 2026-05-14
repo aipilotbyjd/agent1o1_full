@@ -1,11 +1,11 @@
 <?php
 
-use App\Engine\Data\ExpressionParser;
+use App\Engine\Data\ExpressionResolver;
 
 // ── Compilation ─────────────────────────────────────────────
 
 test('plain string compiles to a single literal token', function () {
-    $parser = new ExpressionParser;
+    $parser = new ExpressionResolver;
 
     $tokens = $parser->compile('Hello World');
 
@@ -14,7 +14,7 @@ test('plain string compiles to a single literal token', function () {
 });
 
 test('single expression compiles to a path token', function () {
-    $parser = new ExpressionParser;
+    $parser = new ExpressionResolver;
 
     $tokens = $parser->compile('{{ $nodes.httpCall.output.body.token }}');
 
@@ -28,7 +28,7 @@ test('single expression compiles to a path token', function () {
 });
 
 test('mixed template compiles to literal and path tokens', function () {
-    $parser = new ExpressionParser;
+    $parser = new ExpressionResolver;
 
     $tokens = $parser->compile('Bearer {{ $nodes.auth.output.token }}');
 
@@ -43,7 +43,7 @@ test('mixed template compiles to literal and path tokens', function () {
 });
 
 test('variable expression compiles correctly', function () {
-    $parser = new ExpressionParser;
+    $parser = new ExpressionResolver;
 
     $tokens = $parser->compile('{{ $vars.api_key }}');
 
@@ -56,7 +56,7 @@ test('variable expression compiles correctly', function () {
 });
 
 test('trigger expression compiles correctly', function () {
-    $parser = new ExpressionParser;
+    $parser = new ExpressionResolver;
 
     $tokens = $parser->compile('{{ $trigger.body.name }}');
 
@@ -69,7 +69,7 @@ test('trigger expression compiles correctly', function () {
 });
 
 test('loop expression compiles correctly', function () {
-    $parser = new ExpressionParser;
+    $parser = new ExpressionResolver;
 
     $tokens = $parser->compile('{{ $loop.index }}');
 
@@ -82,7 +82,7 @@ test('loop expression compiles correctly', function () {
 });
 
 test('multiple expressions in one template compile correctly', function () {
-    $parser = new ExpressionParser;
+    $parser = new ExpressionResolver;
 
     $tokens = $parser->compile('{{ $vars.base_url }}/api/{{ $nodes.setup.output.version }}');
 
@@ -95,7 +95,7 @@ test('multiple expressions in one template compile correctly', function () {
 // ── Resolution ──────────────────────────────────────────────
 
 test('single path token resolves to raw value preserving type', function () {
-    $parser = new ExpressionParser;
+    $parser = new ExpressionResolver;
 
     $tokens = $parser->compile('{{ $nodes.http.output.count }}');
 
@@ -107,7 +107,7 @@ test('single path token resolves to raw value preserving type', function () {
 });
 
 test('mixed template resolves to concatenated string', function () {
-    $parser = new ExpressionParser;
+    $parser = new ExpressionResolver;
 
     $tokens = $parser->compile('Bearer {{ $vars.token }}');
 
@@ -117,7 +117,7 @@ test('mixed template resolves to concatenated string', function () {
 });
 
 test('nested path resolves correctly', function () {
-    $parser = new ExpressionParser;
+    $parser = new ExpressionResolver;
 
     $result = $parser->evaluate('{{ $nodes.api.output.data.users.0.name }}', [
         'nodes' => ['api' => ['output' => ['data' => ['users' => [['name' => 'Jaydeep']]]]]],
@@ -127,7 +127,7 @@ test('nested path resolves correctly', function () {
 });
 
 test('missing path resolves to null', function () {
-    $parser = new ExpressionParser;
+    $parser = new ExpressionResolver;
 
     $result = $parser->evaluate('{{ $nodes.missing.output.value }}', ['nodes' => []]);
 
@@ -135,7 +135,7 @@ test('missing path resolves to null', function () {
 });
 
 test('array output resolves to JSON in concatenated context', function () {
-    $parser = new ExpressionParser;
+    $parser = new ExpressionResolver;
 
     $tokens = $parser->compile('Data: {{ $nodes.http.output.items }}');
 
@@ -147,7 +147,7 @@ test('array output resolves to JSON in concatenated context', function () {
 // ── Config compilation ──────────────────────────────────────
 
 test('compileConfig marks expression strings and leaves others untouched', function () {
-    $parser = new ExpressionParser;
+    $parser = new ExpressionResolver;
 
     $compiled = $parser->compileConfig([
         'url' => '{{ $vars.base_url }}/api',
@@ -165,7 +165,7 @@ test('compileConfig marks expression strings and leaves others untouched', funct
 });
 
 test('resolveConfig resolves compiled expressions', function () {
-    $parser = new ExpressionParser;
+    $parser = new ExpressionResolver;
 
     $compiled = $parser->compileConfig([
         'url' => '{{ $vars.base_url }}/users',
@@ -183,7 +183,7 @@ test('resolveConfig resolves compiled expressions', function () {
 // ── Dependency extraction ───────────────────────────────────
 
 test('extractNodeDependencies returns referenced node IDs', function () {
-    $parser = new ExpressionParser;
+    $parser = new ExpressionResolver;
 
     $deps = $parser->extractNodeDependencies(
         '{{ $nodes.auth.output.token }} and {{ $nodes.config.output.url }}'
@@ -193,7 +193,7 @@ test('extractNodeDependencies returns referenced node IDs', function () {
 });
 
 test('extractNodeDependencies deduplicates', function () {
-    $parser = new ExpressionParser;
+    $parser = new ExpressionResolver;
 
     $deps = $parser->extractNodeDependencies(
         '{{ $nodes.http.output.a }} {{ $nodes.http.output.b }}'
@@ -205,7 +205,7 @@ test('extractNodeDependencies deduplicates', function () {
 // ── Utility ─────────────────────────────────────────────────
 
 test('hasExpressions detects templates', function () {
-    $parser = new ExpressionParser;
+    $parser = new ExpressionResolver;
 
     expect($parser->hasExpressions('{{ $vars.x }}'))->toBeTrue()
         ->and($parser->hasExpressions('plain string'))->toBeFalse();

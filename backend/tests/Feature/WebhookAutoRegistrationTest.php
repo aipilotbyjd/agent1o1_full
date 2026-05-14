@@ -1,8 +1,8 @@
 <?php
 
-use App\Engine\WebhookRegistrars\GitHubWebhookRegistrar;
-use App\Engine\WebhookRegistrars\StripeWebhookRegistrar;
-use App\Engine\WebhookRegistrars\WebhookRegistrarRegistry;
+use App\Engine\Webhook\GitHubWebhookRegistrar;
+use App\Engine\Webhook\StripeWebhookRegistrar;
+use App\Engine\Webhook\WebhookRegistrarRegistry;
 use App\Enums\Role;
 use App\Models\Credential;
 use App\Models\User;

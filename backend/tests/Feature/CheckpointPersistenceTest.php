@@ -1,10 +1,10 @@
 <?php
 
 use App\Engine\Data\OutputBuffer;
-use App\Engine\Data\Suspension;
+use App\Engine\Data\ExecutionPause;
 use App\Engine\NodeResult;
-use App\Engine\Persistence\CheckpointStore;
-use App\Engine\RunContext;
+use App\Models\ExecutionCheckpoint;
+use App\Engine\WorkflowContext;
 use App\Engine\WorkflowGraph;
 use App\Enums\ExecutionStatus;
 use App\Models\Execution;
@@ -83,13 +83,13 @@ it('snapshots and restores OutputBuffer with ref counts', function () {
     expect($restored->get('a'))->toBe(['result' => 'hello']);
 });
 
-// ── RunContext snapshot ──────────────────────────────────────
+// ── WorkflowContext snapshot ──────────────────────────────────────
 
 it('creates a snapshot of the runtime state', function () {
     $graph = buildSimpleGraph();
     $buffer = new OutputBuffer(executionId: 1, downstreamConsumers: $graph->downstreamConsumers);
 
-    $context = new RunContext(
+    $context = new WorkflowContext(
         graph: $graph,
         outputs: $buffer,
         executionId: 1,
@@ -107,14 +107,14 @@ it('creates a snapshot of the runtime state', function () {
         ->and($snapshot['remaining_in_degree']['b'])->toBe(0);
 });
 
-// ── CheckpointStore ──────────────────────────────────────────
+// ── ExecutionCheckpoint ──────────────────────────────────────────
 
 it('saves and loads a checkpoint', function () {
     $execution = Execution::factory()->running()->create();
     $graph = buildSimpleGraph();
     $buffer = new OutputBuffer(executionId: $execution->id, downstreamConsumers: $graph->downstreamConsumers);
 
-    $context = new RunContext(
+    $context = new WorkflowContext(
         graph: $graph,
         outputs: $buffer,
         executionId: $execution->id,
@@ -123,9 +123,9 @@ it('saves and loads a checkpoint', function () {
 
     $context->complete('a', NodeResult::completed(['out' => 1], 5));
 
-    $suspension = new Suspension(reason: 'rate_limit', resumeAt: now()->addMinutes(5));
+    $suspension = new ExecutionPause(reason: 'rate_limit', resumeAt: now()->addMinutes(5));
 
-    $store = new CheckpointStore;
+    $store = new ExecutionCheckpoint;
     $store->save($execution, $context, $suspension);
 
     $loaded = $store->load($execution->id);
@@ -143,16 +143,16 @@ it('overwrites existing checkpoint on save', function () {
     $graph = buildSimpleGraph();
     $buffer = new OutputBuffer(executionId: $execution->id, downstreamConsumers: $graph->downstreamConsumers);
 
-    $context = new RunContext(
+    $context = new WorkflowContext(
         graph: $graph,
         outputs: $buffer,
         executionId: $execution->id,
     );
 
-    $store = new CheckpointStore;
+    $store = new ExecutionCheckpoint;
 
-    $store->save($execution, $context, new Suspension(reason: 'first', resumeAt: now()->addMinutes(5)));
-    $store->save($execution, $context, new Suspension(reason: 'second', resumeAt: now()->addMinutes(5)));
+    $store->save($execution, $context, new ExecutionPause(reason: 'first', resumeAt: now()->addMinutes(5)));
+    $store->save($execution, $context, new ExecutionPause(reason: 'second', resumeAt: now()->addMinutes(5)));
 
     expect(ExecutionCheckpoint::where('execution_id', $execution->id)->count())->toBe(1)
         ->and($store->load($execution->id)->suspend_reason)->toBe('second');
@@ -163,14 +163,14 @@ it('deletes a checkpoint', function () {
     $graph = buildSimpleGraph();
     $buffer = new OutputBuffer(executionId: $execution->id, downstreamConsumers: $graph->downstreamConsumers);
 
-    $context = new RunContext(
+    $context = new WorkflowContext(
         graph: $graph,
         outputs: $buffer,
         executionId: $execution->id,
     );
 
-    $store = new CheckpointStore;
-    $store->save($execution, $context, new Suspension(reason: 'wait', resumeAt: now()->addMinutes(5)));
+    $store = new ExecutionCheckpoint;
+    $store->save($execution, $context, new ExecutionPause(reason: 'wait', resumeAt: now()->addMinutes(5)));
     $store->delete($execution->id);
 
     expect($store->load($execution->id))->toBeNull();

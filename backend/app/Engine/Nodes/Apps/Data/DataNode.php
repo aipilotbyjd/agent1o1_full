@@ -10,7 +10,7 @@ use Carbon\Carbon;
  * DataNode — all 15 required data-transformation operations in one class.
  *
  * Operation is selected via config['operation']. Each sub-method receives
- * the full NodePayload and returns an array that becomes the node output.
+ * the full NodeInput and returns an array that becomes the node output.
  *
  * Operations:
  *   json_transform    — pick, omit, get path, set path, merge, flatten, stringify, parse

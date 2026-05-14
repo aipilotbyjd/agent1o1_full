@@ -2,10 +2,10 @@
 
 use App\Engine\Data\OutputBuffer;
 use App\Engine\NodeResult;
-use App\Engine\RunContext;
+use App\Engine\WorkflowContext;
 use App\Engine\Runners\AsyncRunner;
-use App\Engine\Runners\NodePayload;
-use App\Engine\Runners\NodePayloadFactory;
+use App\Engine\Runners\NodeInput;
+use App\Engine\Runners\NodeInput;
 use App\Engine\WorkflowGraph;
 
 // ── Helpers ─────────────────────────────────────────────────
@@ -43,9 +43,9 @@ function buildTestGraph(array $nodes): WorkflowGraph
     );
 }
 
-function buildTestContext(WorkflowGraph $graph): RunContext
+function buildTestContext(WorkflowGraph $graph): WorkflowContext
 {
-    return new RunContext(
+    return new WorkflowContext(
         graph: $graph,
         outputs: new OutputBuffer(executionId: 1),
         executionId: 1,
@@ -57,7 +57,7 @@ function buildTestContext(WorkflowGraph $graph): RunContext
 // ── Tests ───────────────────────────────────────────────────
 
 test('empty batch returns empty results', function () {
-    $factory = Mockery::mock(NodePayloadFactory::class);
+    $factory = Mockery::mock(NodeInput::class);
     $runner = new AsyncRunner($factory, maxConcurrency: 4);
 
     $graph = buildTestGraph(['n1' => ['type' => 'trigger', 'name' => 'N1']]);
@@ -69,10 +69,10 @@ test('empty batch returns empty results', function () {
 });
 
 test('single node batch runs inline and returns completed result', function () {
-    $factory = Mockery::mock(NodePayloadFactory::class);
+    $factory = Mockery::mock(NodeInput::class);
     $factory->shouldReceive('build')
         ->once()
-        ->andReturn(new NodePayload(
+        ->andReturn(new NodeInput(
             nodeId: 'n1',
             nodeType: 'trigger',
             nodeName: 'Start',
@@ -91,10 +91,10 @@ test('single node batch runs inline and returns completed result', function () {
 });
 
 test('single node returns failed result for unknown type', function () {
-    $factory = Mockery::mock(NodePayloadFactory::class);
+    $factory = Mockery::mock(NodeInput::class);
     $factory->shouldReceive('build')
         ->once()
-        ->andReturn(new NodePayload(
+        ->andReturn(new NodeInput(
             nodeId: 'n1',
             nodeType: 'nonexistent_xyz_type',
             nodeName: 'Bad Node',
@@ -116,13 +116,13 @@ test('single node returns failed result for unknown type', function () {
 test('multi-node batch builds all payloads before execution', function () {
     $buildOrder = [];
 
-    $factory = Mockery::mock(NodePayloadFactory::class);
+    $factory = Mockery::mock(NodeInput::class);
     $factory->shouldReceive('build')
         ->times(3)
         ->andReturnUsing(function (string $nodeId) use (&$buildOrder) {
             $buildOrder[] = $nodeId;
 
-            return new NodePayload(
+            return new NodeInput(
                 nodeId: $nodeId,
                 nodeType: 'nonexistent_xyz_type',
                 nodeName: $nodeId,
@@ -149,9 +149,9 @@ test('multi-node batch builds all payloads before execution', function () {
 });
 
 test('multi-node batch returns results for every node even on concurrency failure', function () {
-    $factory = Mockery::mock(NodePayloadFactory::class);
+    $factory = Mockery::mock(NodeInput::class);
     $factory->shouldReceive('build')
-        ->andReturnUsing(fn (string $nodeId) => new NodePayload(
+        ->andReturnUsing(fn (string $nodeId) => new NodeInput(
             nodeId: $nodeId,
             nodeType: 'nonexistent_xyz_type',
             nodeName: $nodeId,

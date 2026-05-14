@@ -35,7 +35,7 @@ class WorkflowNodeTool implements Tool
     }
 
     /**
-     * Execute the tool by routing to the engine's NodeRegistry.
+     * Execute the tool by routing to the engine's NodeCatalog.
      */
     public function handle(Request $request): Stringable|string
     {

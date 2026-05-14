@@ -1,8 +1,8 @@
 <?php
 
-use App\Engine\Data\ExpressionParser;
-use App\Engine\Exceptions\CycleDetectedException;
-use App\Engine\GraphCompiler;
+use App\Engine\Data\ExpressionResolver;
+use App\Exceptions\CycleDetectedException;
+use App\Engine\WorkflowGraph;
 
 // ── Helpers ─────────────────────────────────────────────────
 
@@ -27,9 +27,9 @@ function makeEdges(array $pairs): array
     ], $pairs);
 }
 
-function compiler(): GraphCompiler
+function compiler(): WorkflowGraph
 {
-    return new GraphCompiler(new ExpressionParser);
+    return new WorkflowGraph(new ExpressionResolver);
 }
 
 // ── Basic compilation ───────────────────────────────────────
