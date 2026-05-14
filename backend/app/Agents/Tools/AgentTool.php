@@ -2,7 +2,7 @@
 
 namespace App\Agents\Tools;
 
-use App\Agents\Runner\AgentRunner;
+use App\Agents\AgentRunner;
 use App\Agents\Skills\SkillContextBuilder;
 use App\Models\Agent;
 use Laravel\Ai\Contracts\Tool;

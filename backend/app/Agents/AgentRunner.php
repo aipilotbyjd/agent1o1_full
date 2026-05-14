@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Agents\Runner;
+namespace App\Agents;
 
-use App\Agents\Contracts\AgentRunnable;
 use App\Agents\Internal\WorkflowAgent;
 use App\Agents\Skills\SkillContextBuilder;
-use App\Agents\Skills\SkillScriptTool;
+use App\Agents\Tools\SkillScriptTool;
 use App\Agents\Tools\UpdateSkillTool;
 use App\Agents\Tools\WorkflowNodeTool;
 use App\Agents\Tools\WorkflowTool;
+use App\Contracts\AgentRunnable;
 use App\Models\Agent;
 use App\Models\AgentToolConfig;
 use App\Models\Node;
@@ -137,9 +137,6 @@ class AgentRunner implements AgentRunnable
         return $tools;
     }
 
-    /**
-     * Resolve provider string to Lab enum.
-     */
     private function resolveProvider(?string $provider): ?Lab
     {
         if ($provider === null) {

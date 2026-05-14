@@ -2,7 +2,7 @@
 
 namespace App\Engine\Nodes\Core;
 
-use App\Agents\Runner\AgentRunner;
+use App\Agents\AgentRunner;
 use App\Agents\Skills\SkillContextBuilder;
 use App\Contracts\NodeHandler;
 use App\Engine\NodeResult;

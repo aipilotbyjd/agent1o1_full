@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Agents\Skills;
+namespace App\Agents\Tools;
 
 use App\Models\AgentSkillScript;
 use Laravel\Ai\Contracts\Tool;
