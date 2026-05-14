@@ -21,6 +21,7 @@ export type TEditorUiState = {
 	aiPanelOpen: boolean;
 	miniMapOpen: boolean;
 	commandPaletteOpen: boolean;
+	quickAddOpen: boolean;
 	importExportOpen: boolean;
 	selectedNodeId: string | null;
 };

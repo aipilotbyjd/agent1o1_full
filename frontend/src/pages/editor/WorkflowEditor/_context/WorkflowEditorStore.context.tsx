@@ -50,6 +50,7 @@ export type TWorkflowEditorAction =
 	| { type: 'TOGGLE_AI_PANEL' }
 	| { type: 'TOGGLE_MINIMAP' }
 	| { type: 'SET_COMMAND_PALETTE'; open: boolean }
+	| { type: 'SET_QUICK_ADD'; open: boolean }
 	| { type: 'SET_IMPORT_EXPORT'; open: boolean }
 	| { type: 'RUN_START'; id: string }
 	| { type: 'RUN_FINISH'; status: 'success' | 'error' | 'stopped' }
@@ -105,6 +106,7 @@ export const initialWorkflowEditorState: TWorkflowEditorState = {
 		aiPanelOpen: false,
 		miniMapOpen: true,
 		commandPaletteOpen: false,
+		quickAddOpen: false,
 		importExportOpen: false,
 		selectedNodeId: null,
 	},
@@ -368,6 +370,8 @@ export const workflowEditorReducer = (
 			return { ...state, ui: { ...state.ui, miniMapOpen: !state.ui.miniMapOpen } };
 		case 'SET_COMMAND_PALETTE':
 			return { ...state, ui: { ...state.ui, commandPaletteOpen: action.open } };
+		case 'SET_QUICK_ADD':
+			return { ...state, ui: { ...state.ui, quickAddOpen: action.open } };
 		case 'SET_IMPORT_EXPORT':
 			return { ...state, ui: { ...state.ui, importExportOpen: action.open } };
 		case 'RUN_START':

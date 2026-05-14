@@ -56,6 +56,11 @@ const ActionBar = () => {
 			<ToolButton title='Auto-layout' onClick={() => dispatch({ type: 'AUTO_LAYOUT' })}>
 				<LayoutGrid size={15} />
 			</ToolButton>
+			<ToolButton
+				title='Quick add node'
+				onClick={() => dispatch({ type: 'SET_QUICK_ADD', open: true })}>
+				<Plus size={16} />
+			</ToolButton>
 			<div className='mx-1 h-6 w-px bg-zinc-200 dark:bg-white/10' />
 			<ToolButton
 				title='Toggle minimap'

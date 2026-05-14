@@ -132,6 +132,7 @@ const WorkflowLaunchSurface = () => {
 	const [surfaceMode, setSurfaceMode] = useState<'launch' | 'interface'>('launch');
 	const [copiedInterfaceUrl, setCopiedInterfaceUrl] = useState(false);
 	const [triggerPickerOpen, setTriggerPickerOpen] = useState(false);
+	const [triggerProModalOpen, setTriggerProModalOpen] = useState(false);
 	const [triggerSearch, setTriggerSearch] = useState('');
 	const [selectedTrigger, setSelectedTrigger] = useState(triggerOptions[0]);
 	const activePrompt = promptExamples[exampleIndex];
@@ -151,6 +152,11 @@ const WorkflowLaunchSurface = () => {
 		await navigator.clipboard?.writeText(interfaceUrl);
 		setCopiedInterfaceUrl(true);
 		window.setTimeout(() => setCopiedInterfaceUrl(false), 1600);
+	};
+
+	const openTriggerProModal = () => {
+		setTriggerPickerOpen(false);
+		setTriggerProModalOpen(true);
 	};
 
 	useEffect(() => {
@@ -230,7 +236,7 @@ const WorkflowLaunchSurface = () => {
 					</button>
 					<button
 						type='button'
-						onClick={() => setTriggerPickerOpen(true)}
+						onClick={openTriggerProModal}
 						className='hidden h-9 items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold shadow-xs transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md md:flex'>
 						<Zap size={17} />
 						Add trigger
@@ -310,7 +316,7 @@ const WorkflowLaunchSurface = () => {
 									</div>
 									<button
 										type='button'
-										onClick={() => setTriggerPickerOpen(true)}
+										onClick={openTriggerProModal}
 										className='rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-bold text-zinc-600 shadow-xs transition hover:bg-zinc-50'>
 										Change
 									</button>
@@ -448,7 +454,11 @@ const WorkflowLaunchSurface = () => {
 							return (
 								<button
 									key={option.label}
-									onClick={() => setTriggerPickerOpen(option.label.includes('trigger'))}
+									onClick={() =>
+										option.label.includes('trigger')
+											? openTriggerProModal()
+											: setTriggerPickerOpen(false)
+									}
 									className='group flex w-34 flex-col items-center text-center transition hover:-translate-y-1 sm:w-40'>
 									<div className='flex h-14 w-14 items-center justify-center rounded-2xl border border-zinc-200 bg-white shadow-sm transition group-hover:border-zinc-300 group-hover:shadow-xl group-hover:shadow-zinc-200/80 sm:h-16 sm:w-16'>
 										<Icon size={25} className={option.accent} />
@@ -570,6 +580,54 @@ const WorkflowLaunchSurface = () => {
 					</motion.div>
 				)}
 			</div>
+			{triggerProModalOpen && (
+				<div className='absolute inset-0 z-50 flex items-center justify-center bg-white/45 p-4 backdrop-blur-[3px]'>
+					<motion.div
+						initial={{ opacity: 0, y: 18, scale: 0.98 }}
+						animate={{ opacity: 1, y: 0, scale: 1 }}
+						transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+						className='relative flex min-h-[360px] w-full max-w-[860px] flex-col rounded-2xl border border-zinc-200 bg-white shadow-2xl shadow-zinc-300/70 sm:min-h-[430px]'>
+						<div className='flex items-center justify-between px-5 pt-5 sm:px-7 sm:pt-6'>
+							<h2 className='text-lg font-bold tracking-tight text-zinc-950 sm:text-xl'>
+								Start your flow from an external service
+							</h2>
+							<button
+								type='button'
+								aria-label='Close trigger upgrade modal'
+								onClick={() => setTriggerProModalOpen(false)}
+								className='flex h-9 w-9 items-center justify-center rounded-xl text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-950'>
+								<Plus size={20} className='rotate-45' />
+							</button>
+						</div>
+
+						<div className='flex flex-1 flex-col items-center justify-center px-6 pb-9 text-center sm:px-10 sm:pb-12'>
+							<div className='mb-7 flex h-16 w-16 items-center justify-center rounded-full bg-[linear-gradient(135deg,#ec4899,#60a5fa)] text-white shadow-lg shadow-pink-200'>
+								<Sparkles size={34} strokeWidth={2.2} />
+							</div>
+							<div className='flex flex-wrap items-center justify-center gap-3'>
+								<div className='text-2xl font-bold tracking-tight text-zinc-950'>
+									Pro Feature
+								</div>
+								<span className='rounded-lg bg-pink-500 px-2.5 py-1 text-xs font-bold text-white shadow-sm shadow-pink-200'>
+									Upgrade Required
+								</span>
+							</div>
+							<p className='mt-5 max-w-md text-base leading-7 font-medium text-zinc-500'>
+								Triggers allow you to start your flows from external services like
+								webhooks, forms, and APIs. Upgrade to Pro to unlock this powerful
+								feature.
+							</p>
+							<button
+								type='button'
+								className='mt-8 flex h-12 items-center gap-3 rounded-xl bg-pink-500 px-6 text-base font-bold text-white shadow-lg shadow-pink-200 transition hover:-translate-y-0.5 hover:bg-pink-600'>
+								<Sparkles size={18} />
+								Upgrade to Pro
+								<ChevronRight size={19} />
+							</button>
+						</div>
+					</motion.div>
+				</div>
+			)}
 			{triggerPickerOpen && (
 				<div className='absolute inset-0 z-40 bg-zinc-950/10 backdrop-blur-[1px]'>
 					<motion.div

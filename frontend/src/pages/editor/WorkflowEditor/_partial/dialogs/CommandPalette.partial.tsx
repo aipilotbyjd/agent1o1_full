@@ -42,6 +42,13 @@ const CommandPalette = () => {
 			category: 'Panels',
 		},
 		{
+			label: 'Quick add node',
+			description: 'Search and add a node to the canvas',
+			shortcut: '⌘K',
+			action: () => dispatch({ type: 'SET_QUICK_ADD', open: true }),
+			category: 'Workflow',
+		},
+		{
 			label: 'Toggle left panel',
 			description: 'Show/hide node library',
 			shortcut: '⌘⇧L',

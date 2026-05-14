@@ -5,6 +5,7 @@ import AiBuilderPanel from '../_partial/ai/AiBuilderPanel.partial';
 import Canvas from '../_partial/canvas/Canvas.partial';
 import CommandPalette from '../_partial/dialogs/CommandPalette.partial';
 import ImportExportDialog from '../_partial/dialogs/ImportExportDialog.partial';
+import QuickAddNodeDialog from '../_partial/dialogs/QuickAddNodeDialog.partial';
 import Inspector from '../_partial/inspector/Inspector.partial';
 import NodeLibrary from '../_partial/library/NodeLibrary.partial';
 import RunPanel from '../_partial/run/RunPanel.partial';
@@ -97,9 +98,7 @@ const BuildPage = () => {
 									minWidth={360}
 									maxWidth='45vw'
 									enable={{ right: true }}
-									onResizeStop={(_, __, ref) =>
-										setAiPanelWidth(ref.offsetWidth)
-									}
+									onResizeStop={(_, __, ref) => setAiPanelWidth(ref.offsetWidth)}
 									className='min-h-0 shrink-0'>
 									<AiBuilderPanel />
 								</Resizable>
@@ -164,9 +163,7 @@ const BuildPage = () => {
 								minHeight={180}
 								maxHeight='58vh'
 								enable={{ top: true }}
-								onResizeStop={(_, __, ref) =>
-									setRunPanelHeight(ref.offsetHeight)
-								}
+								onResizeStop={(_, __, ref) => setRunPanelHeight(ref.offsetHeight)}
 								className='shrink-0'>
 								<RunPanel />
 							</Resizable>
@@ -176,6 +173,7 @@ const BuildPage = () => {
 				</>
 			)}
 			<CommandPalette />
+			<QuickAddNodeDialog />
 			<ImportExportDialog />
 		</div>
 	);

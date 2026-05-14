@@ -41,6 +41,13 @@ export const useEditorHotkeys = () => {
 				return;
 			}
 
+			// Quick add node
+			if (mod && event.key.toLowerCase() === 'k') {
+				event.preventDefault();
+				dispatch({ type: 'SET_QUICK_ADD', open: true });
+				return;
+			}
+
 			// Command palette
 			if (mod && event.key.toLowerCase() === 'p') {
 				event.preventDefault();
