@@ -109,6 +109,7 @@ class TriggerTypeSeeder extends Seeder
                 'zapier_mode' => 'instant',
                 'requires_credential' => true,
                 'requires_config_fields' => true,
+                'webhook_events' => ['push'],
             ],
             [
                 'category_slug' => 'github',
@@ -119,6 +120,7 @@ class TriggerTypeSeeder extends Seeder
                 'zapier_mode' => 'instant',
                 'requires_credential' => true,
                 'requires_config_fields' => true,
+                'webhook_events' => ['pull_request'],
             ],
             [
                 'category_slug' => 'github',
@@ -129,6 +131,7 @@ class TriggerTypeSeeder extends Seeder
                 'zapier_mode' => 'instant',
                 'requires_credential' => true,
                 'requires_config_fields' => true,
+                'webhook_events' => ['issues'],
             ],
             [
                 'category_slug' => 'github',
@@ -139,6 +142,7 @@ class TriggerTypeSeeder extends Seeder
                 'zapier_mode' => 'instant',
                 'requires_credential' => true,
                 'requires_config_fields' => true,
+                'webhook_events' => ['release'],
             ],
 
             // Slack triggers
@@ -151,6 +155,7 @@ class TriggerTypeSeeder extends Seeder
                 'zapier_mode' => 'instant',
                 'requires_credential' => true,
                 'requires_config_fields' => true,
+                'webhook_events' => ['message.channels', 'message.groups', 'message.im'],
             ],
             [
                 'category_slug' => 'slack',
@@ -161,6 +166,7 @@ class TriggerTypeSeeder extends Seeder
                 'zapier_mode' => 'instant',
                 'requires_credential' => true,
                 'requires_config_fields' => true,
+                'webhook_events' => ['app_mention'],
             ],
             [
                 'category_slug' => 'slack',
@@ -171,6 +177,7 @@ class TriggerTypeSeeder extends Seeder
                 'zapier_mode' => 'instant',
                 'requires_credential' => true,
                 'requires_config_fields' => true,
+                'webhook_events' => ['reaction_added'],
             ],
 
             // Stripe triggers
@@ -183,6 +190,7 @@ class TriggerTypeSeeder extends Seeder
                 'zapier_mode' => 'instant',
                 'requires_credential' => true,
                 'requires_config_fields' => false,
+                'webhook_events' => ['charge.succeeded'],
             ],
             [
                 'category_slug' => 'stripe',
@@ -193,6 +201,7 @@ class TriggerTypeSeeder extends Seeder
                 'zapier_mode' => 'instant',
                 'requires_credential' => true,
                 'requires_config_fields' => false,
+                'webhook_events' => ['invoice.created'],
             ],
             [
                 'category_slug' => 'stripe',
@@ -203,6 +212,7 @@ class TriggerTypeSeeder extends Seeder
                 'zapier_mode' => 'instant',
                 'requires_credential' => true,
                 'requires_config_fields' => false,
+                'webhook_events' => ['customer.created'],
             ],
 
             // Google Sheets triggers
@@ -237,6 +247,7 @@ class TriggerTypeSeeder extends Seeder
                 'zapier_mode' => 'instant',
                 'requires_credential' => true,
                 'requires_config_fields' => true,
+                'webhook_events' => ['records.created'],
             ],
             [
                 'category_slug' => 'airtable',
@@ -247,6 +258,7 @@ class TriggerTypeSeeder extends Seeder
                 'zapier_mode' => 'instant',
                 'requires_credential' => true,
                 'requires_config_fields' => true,
+                'webhook_events' => ['records.updated'],
             ],
 
             // Discord triggers
@@ -259,6 +271,7 @@ class TriggerTypeSeeder extends Seeder
                 'zapier_mode' => 'instant',
                 'requires_credential' => true,
                 'requires_config_fields' => true,
+                'webhook_events' => ['message'],
             ],
             [
                 'category_slug' => 'discord',
@@ -269,6 +282,7 @@ class TriggerTypeSeeder extends Seeder
                 'zapier_mode' => 'instant',
                 'requires_credential' => true,
                 'requires_config_fields' => true,
+                'webhook_events' => ['reaction'],
             ],
 
             // Gmail triggers
@@ -301,6 +315,7 @@ class TriggerTypeSeeder extends Seeder
                     'zapier_mode' => $type['zapier_mode'],
                     'requires_credential' => $type['requires_credential'],
                     'requires_config_fields' => $type['requires_config_fields'],
+                    'webhook_events' => $type['webhook_events'] ?? null,
                     'is_active' => true,
                 ]
             );

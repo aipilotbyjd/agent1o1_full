@@ -21,12 +21,14 @@ class TriggerType extends Model
         'zapier_mode',
         'requires_credential',
         'requires_config_fields',
+        'webhook_events',
         'is_active',
     ];
 
     protected $casts = [
         'requires_credential' => 'boolean',
         'requires_config_fields' => 'boolean',
+        'webhook_events' => 'array',
         'is_active' => 'boolean',
     ];
 
