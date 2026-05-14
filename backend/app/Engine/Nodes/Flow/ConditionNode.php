@@ -2,16 +2,16 @@
 
 namespace App\Engine\Nodes\Flow;
 
-use App\Engine\Contracts\NodeHandler;
+use App\Contracts\NodeHandler;
 use App\Engine\NodeResult;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 /**
  * Evaluates conditions and activates the matching output branch.
  */
 class ConditionNode implements NodeHandler
 {
-    public function handle(NodePayload $payload): NodeResult
+    public function handle(NodeInput $payload): NodeResult
     {
         $startTime = hrtime(true);
 

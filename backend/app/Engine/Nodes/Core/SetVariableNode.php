@@ -2,16 +2,16 @@
 
 namespace App\Engine\Nodes\Core;
 
-use App\Engine\Contracts\NodeHandler;
+use App\Contracts\NodeHandler;
 use App\Engine\NodeResult;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 /**
  * Sets one or more variables into the execution context.
  */
 class SetVariableNode implements NodeHandler
 {
-    public function handle(NodePayload $payload): NodeResult
+    public function handle(NodeInput $payload): NodeResult
     {
         $startTime = hrtime(true);
 

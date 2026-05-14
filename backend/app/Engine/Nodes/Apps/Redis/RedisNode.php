@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Redis;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Redis;
 
 /**
@@ -48,7 +48,7 @@ class RedisNode extends AppNode
         ];
     }
 
-    private function redis(NodePayload $payload): \Illuminate\Redis\Connections\Connection
+    private function redis(NodeInput $payload): \Illuminate\Redis\Connections\Connection
     {
         $credentials = $payload->credentials ?? [];
         $host = (string) ($credentials['host'] ?? '');
@@ -78,7 +78,7 @@ class RedisNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function get(NodePayload $payload): array
+    private function get(NodeInput $payload): array
     {
         $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
         $value = $this->redis($payload)->get($key);
@@ -89,7 +89,7 @@ class RedisNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function set(NodePayload $payload): array
+    private function set(NodeInput $payload): array
     {
         $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
         $value = $payload->inputData['value'] ?? $payload->config['value'] ?? null;
@@ -109,7 +109,7 @@ class RedisNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function delete(NodePayload $payload): array
+    private function delete(NodeInput $payload): array
     {
         $keys = array_filter((array) ($payload->inputData['keys'] ?? [$payload->inputData['key'] ?? $payload->config['key'] ?? '']));
         $count = $this->redis($payload)->del($keys);
@@ -120,7 +120,7 @@ class RedisNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function exists(NodePayload $payload): array
+    private function exists(NodeInput $payload): array
     {
         $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
 
@@ -130,7 +130,7 @@ class RedisNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function incr(NodePayload $payload): array
+    private function incr(NodeInput $payload): array
     {
         $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
         $by = (int) ($payload->config['by'] ?? 1);
@@ -143,7 +143,7 @@ class RedisNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function decr(NodePayload $payload): array
+    private function decr(NodeInput $payload): array
     {
         $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
         $by = (int) ($payload->config['by'] ?? 1);
@@ -156,7 +156,7 @@ class RedisNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function lpush(NodePayload $payload): array
+    private function lpush(NodeInput $payload): array
     {
         $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
         $values = (array) ($payload->inputData['values'] ?? [$payload->inputData['value'] ?? $payload->config['value'] ?? '']);
@@ -169,7 +169,7 @@ class RedisNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function rpush(NodePayload $payload): array
+    private function rpush(NodeInput $payload): array
     {
         $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
         $values = (array) ($payload->inputData['values'] ?? [$payload->inputData['value'] ?? $payload->config['value'] ?? '']);
@@ -182,7 +182,7 @@ class RedisNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function lrange(NodePayload $payload): array
+    private function lrange(NodeInput $payload): array
     {
         $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
         $start = (int) ($payload->config['start'] ?? 0);
@@ -194,7 +194,7 @@ class RedisNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function hset(NodePayload $payload): array
+    private function hset(NodeInput $payload): array
     {
         $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
         $fields = (array) ($payload->inputData['fields'] ?? $payload->config['fields'] ?? []);
@@ -207,7 +207,7 @@ class RedisNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function hget(NodePayload $payload): array
+    private function hget(NodeInput $payload): array
     {
         $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
         $field = (string) ($payload->inputData['field'] ?? $payload->config['field'] ?? '');
@@ -218,7 +218,7 @@ class RedisNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function hgetall(NodePayload $payload): array
+    private function hgetall(NodeInput $payload): array
     {
         $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
 
@@ -228,7 +228,7 @@ class RedisNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function expire(NodePayload $payload): array
+    private function expire(NodeInput $payload): array
     {
         $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
         $seconds = (int) ($payload->inputData['seconds'] ?? $payload->config['seconds'] ?? 3600);
@@ -239,7 +239,7 @@ class RedisNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function ttl(NodePayload $payload): array
+    private function ttl(NodeInput $payload): array
     {
         $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
         $ttl = $this->redis($payload)->ttl($key);
@@ -250,7 +250,7 @@ class RedisNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function keys(NodePayload $payload): array
+    private function keys(NodeInput $payload): array
     {
         $pattern = (string) ($payload->inputData['pattern'] ?? $payload->config['pattern'] ?? '*');
 
@@ -260,7 +260,7 @@ class RedisNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function flushDb(NodePayload $payload): array
+    private function flushDb(NodeInput $payload): array
     {
         $this->redis($payload)->flushdb();
 

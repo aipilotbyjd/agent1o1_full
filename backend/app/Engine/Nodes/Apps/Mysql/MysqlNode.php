@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Mysql;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 /**
  * MySQL node — executes SQL against a remote MySQL/MariaDB instance via PDO.
@@ -29,7 +29,7 @@ class MysqlNode extends AppNode
         ];
     }
 
-    private function connect(NodePayload $payload): \PDO
+    private function connect(NodeInput $payload): \PDO
     {
         $host = (string) ($payload->credentials['host'] ?? '127.0.0.1');
         $port = (int) ($payload->credentials['port'] ?? 3306);
@@ -56,7 +56,7 @@ class MysqlNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function executeQuery(NodePayload $payload): array
+    private function executeQuery(NodeInput $payload): array
     {
         $sql = (string) ($payload->inputData['query'] ?? $payload->config['query'] ?? '');
         $params = (array) ($payload->inputData['params'] ?? $payload->config['params'] ?? []);
@@ -82,7 +82,7 @@ class MysqlNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function insert(NodePayload $payload): array
+    private function insert(NodeInput $payload): array
     {
         $table = (string) ($payload->inputData['table'] ?? $payload->config['table'] ?? '');
         $data = (array) ($payload->inputData['data'] ?? $payload->config['data'] ?? []);
@@ -111,7 +111,7 @@ class MysqlNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function update(NodePayload $payload): array
+    private function update(NodeInput $payload): array
     {
         $table = (string) ($payload->inputData['table'] ?? $payload->config['table'] ?? '');
         $data = (array) ($payload->inputData['data'] ?? $payload->config['data'] ?? []);
@@ -137,7 +137,7 @@ class MysqlNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function delete(NodePayload $payload): array
+    private function delete(NodeInput $payload): array
     {
         $table = (string) ($payload->inputData['table'] ?? $payload->config['table'] ?? '');
         $where = (string) ($payload->inputData['where'] ?? $payload->config['where'] ?? '');

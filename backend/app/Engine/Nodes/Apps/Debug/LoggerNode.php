@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Debug;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -30,7 +30,7 @@ class LoggerNode extends AppNode
     /**
      * Log message
      */
-    private function log(NodePayload $payload): array
+    private function log(NodeInput $payload): array
     {
         $message = $payload->config['message'] ?? '';
         $level = $payload->config['level'] ?? 'info'; // debug | info | warning | error
@@ -79,7 +79,7 @@ class LoggerNode extends AppNode
     /**
      * Debug - Log variable values
      */
-    private function debug(NodePayload $payload): array
+    private function debug(NodeInput $payload): array
     {
         $variables = $payload->config['variables'] ?? $payload->inputData ?? [];
         $label = $payload->config['label'] ?? 'Debug';
@@ -106,7 +106,7 @@ class LoggerNode extends AppNode
     /**
      * Inspect - Detailed variable inspection
      */
-    private function inspect(NodePayload $payload): array
+    private function inspect(NodeInput $payload): array
     {
         $value = $payload->config['value'] ?? $payload->inputData['value'] ?? null;
         $label = $payload->config['label'] ?? 'Inspect';

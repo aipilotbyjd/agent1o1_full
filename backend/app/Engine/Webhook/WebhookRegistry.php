@@ -1,28 +1,23 @@
 <?php
 
-namespace App\Engine\WebhookRegistrars;
+namespace App\Engine\Webhook;
 
-use App\Engine\Contracts\RegisterableWebhook;
-use App\Engine\Contracts\VerifiableWebhook;
+use App\Contracts\WebhookRegistrar;
 
 /**
- * WebhookRegistrarRegistry — the single map of provider → registrar class.
+ * WebhookRegistry — the single map of provider → registrar class.
  *
  * ═══════════════════════════════════════════════════════════════
  * TWO REGISTRAR TIERS
  * ═══════════════════════════════════════════════════════════════
- * All registrars implement VerifiableWebhook:
+ * All registrars implement WebhookRegistrar:
  *   - provider()              — identifies the provider string
  *   - supportsAutoRegistration() — whether API registration is possible
  *   - checkExists()           — verify the webhook still exists
  *   - verifySignature()       — authenticate incoming payloads
  *
- * Auto-registerable providers additionally implement RegisterableWebhook:
- *   - register()   — create the webhook via the provider's API
- *   - unregister() — delete it via the provider's API
- *
- * Discord implements only VerifiableWebhook (manual portal setup required).
- * GitHub, Stripe, Slack implement RegisterableWebhook.
+ * Auto-registerable providers support register() and unregister().
+ * Discord requires manual portal setup — supportsAutoRegistration() returns false.
  *
  * Use resolve() when you only need to verify a signature or check existence.
  * Use resolveRegisterable() when you need to register or unregister.
@@ -30,28 +25,28 @@ use App\Engine\Contracts\VerifiableWebhook;
  * ═══════════════════════════════════════════════════════════════
  * HOW TO ADD A NEW PROVIDER
  * ═══════════════════════════════════════════════════════════════
- * 1. Create your registrar class in app/Engine/WebhookRegistrars/
- *    implementing either VerifiableWebhook or RegisterableWebhook.
+ * 1. Create your registrar class in app/Engine/Webhook/
+ *    implementing WebhookRegistrar.
  * 2. Add a new entry to REGISTRARS below.
  * 3. The rest of the system picks it up automatically.
  */
-class WebhookRegistrarRegistry
+class WebhookRegistry
 {
-    /** @var array<string, class-string<VerifiableWebhook>> */
+    /** @var array<string, class-string<WebhookRegistrar>> */
     private const REGISTRARS = [
-        'github' => GitHubWebhookRegistrar::class,
-        'stripe' => StripeWebhookRegistrar::class,
-        'slack' => SlackWebhookRegistrar::class,
-        'discord' => DiscordWebhookRegistrar::class,
+        'github' => GitHubRegistrar::class,
+        'stripe' => StripeRegistrar::class,
+        'slack' => SlackRegistrar::class,
+        'discord' => DiscordRegistrar::class,
     ];
 
     /**
      * Resolve a registrar instance by provider name.
      *
-     * Returns a VerifiableWebhook — suitable for signature verification
+     * Returns a WebhookRegistrar — suitable for signature verification
      * and health checks. Returns null if the provider has no registrar.
      */
-    public static function resolve(string $provider): ?VerifiableWebhook
+    public static function resolve(string $provider): ?WebhookRegistrar
     {
         $class = self::REGISTRARS[$provider] ?? null;
 
@@ -61,15 +56,15 @@ class WebhookRegistrarRegistry
     /**
      * Resolve a registrar that supports programmatic registration.
      *
-     * Returns a RegisterableWebhook — suitable for calling register() and
+     * Returns a WebhookRegistrar — suitable for calling register() and
      * unregister() via the provider's API. Returns null if the provider has
      * no registrar or only supports manual setup (e.g. Discord).
      */
-    public static function resolveRegisterable(string $provider): ?RegisterableWebhook
+    public static function resolveRegisterable(string $provider): ?WebhookRegistrar
     {
         $registrar = self::resolve($provider);
 
-        return $registrar instanceof RegisterableWebhook ? $registrar : null;
+        return ($registrar !== null && $registrar->supportsAutoRegistration()) ? $registrar : null;
     }
 
     /**

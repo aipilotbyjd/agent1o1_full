@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Twitch;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Http;
 
 class TwitchNode extends AppNode
@@ -28,7 +28,7 @@ class TwitchNode extends AppNode
         ];
     }
 
-    private function client(NodePayload $payload): \Illuminate\Http\Client\PendingRequest
+    private function client(NodeInput $payload): \Illuminate\Http\Client\PendingRequest
     {
         $token = (string) ($payload->credentials['access_token'] ?? '');
         $clientId = (string) ($payload->credentials['client_id'] ?? '');
@@ -41,7 +41,7 @@ class TwitchNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getStream(NodePayload $payload): array
+    private function getStream(NodeInput $payload): array
     {
         $userLogin = (string) ($payload->inputData['user_login'] ?? $payload->config['user_login'] ?? '');
         $userId = (string) ($payload->inputData['user_id'] ?? $payload->config['user_id'] ?? '');
@@ -59,7 +59,7 @@ class TwitchNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getUser(NodePayload $payload): array
+    private function getUser(NodeInput $payload): array
     {
         $login = (string) ($payload->inputData['login'] ?? $payload->config['login'] ?? '');
         $userId = (string) ($payload->inputData['user_id'] ?? $payload->config['user_id'] ?? '');
@@ -77,7 +77,7 @@ class TwitchNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getChannel(NodePayload $payload): array
+    private function getChannel(NodeInput $payload): array
     {
         $broadcasterId = (string) ($payload->inputData['broadcaster_id'] ?? $payload->config['broadcaster_id'] ?? '');
 
@@ -92,7 +92,7 @@ class TwitchNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getClips(NodePayload $payload): array
+    private function getClips(NodeInput $payload): array
     {
         $params = array_filter([
             'broadcaster_id' => $payload->config['broadcaster_id'] ?? null,
@@ -109,7 +109,7 @@ class TwitchNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getTopGames(NodePayload $payload): array
+    private function getTopGames(NodeInput $payload): array
     {
         $response = $this->client($payload)->get('/games/top', ['first' => $payload->config['limit'] ?? 20]);
         $response->throw();
@@ -120,7 +120,7 @@ class TwitchNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createClip(NodePayload $payload): array
+    private function createClip(NodeInput $payload): array
     {
         $broadcasterId = (string) ($payload->inputData['broadcaster_id'] ?? $payload->config['broadcaster_id'] ?? '');
 
@@ -133,7 +133,7 @@ class TwitchNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function sendChatMessage(NodePayload $payload): array
+    private function sendChatMessage(NodeInput $payload): array
     {
         $broadcasterId = (string) ($payload->inputData['broadcaster_id'] ?? $payload->config['broadcaster_id'] ?? '');
         $senderId = (string) ($payload->credentials['user_id'] ?? $payload->config['sender_id'] ?? '');

@@ -2,11 +2,11 @@
 
 namespace App\Engine\Nodes\Flow;
 
-use App\Engine\Contracts\NodeHandler;
-use App\Engine\Contracts\SuspendsExecution;
-use App\Engine\Execution\Suspension;
+use App\Contracts\NodeHandler;
+use App\Contracts\Suspendable;
+use App\Engine\ExecutionPause;
 use App\Engine\NodeResult;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Str;
 
 /**
@@ -27,9 +27,9 @@ use Illuminate\Support\Str;
  *    called. Because ResumeWorkflowJob skips executions not in Waiting
  *    state, whichever job arrives second is a safe no-op.
  */
-class WaitNode implements NodeHandler, SuspendsExecution
+class WaitNode implements NodeHandler, Suspendable
 {
-    public function handle(NodePayload $payload): NodeResult
+    public function handle(NodeInput $payload): NodeResult
     {
         $mode = $payload->config['mode'] ?? 'duration';
 
@@ -49,12 +49,12 @@ class WaitNode implements NodeHandler, SuspendsExecution
         ]);
     }
 
-    public function suspend(NodePayload $payload): Suspension
+    public function suspend(NodeInput $payload): ExecutionPause
     {
         $mode = $payload->config['mode'] ?? 'duration';
 
         if ($mode === 'webhook') {
-            return new Suspension(
+            return new ExecutionPause(
                 reason: 'webhook_wait',
                 // Far future so the auto-dispatched ResumeWorkflowJob
                 // effectively never fires — the webhook route dispatches
@@ -70,7 +70,7 @@ class WaitNode implements NodeHandler, SuspendsExecution
 
         $seconds = (int) ($payload->config['delay_seconds'] ?? $payload->config['seconds'] ?? 0);
 
-        return new Suspension(
+        return new ExecutionPause(
             reason: 'delay',
             resumeAt: now()->addSeconds(max($seconds, 0)),
             nodeOutput: [

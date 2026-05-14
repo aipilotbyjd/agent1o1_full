@@ -4,7 +4,7 @@ namespace App\Engine\Nodes\Apps\Rag;
 
 use App\Agents\Internal\ChatAgent;
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use App\Models\Workspace;
 use App\Services\VectorStoreService;
 use Laravel\Ai\Embeddings;
@@ -39,7 +39,7 @@ class RagQueryNode extends AppNode
     /**
      * Perform RAG query
      */
-    private function query(NodePayload $payload): array
+    private function query(NodeInput $payload): array
     {
         // Configuration
         $query = $payload->config['query'] ?? $payload->inputData['query'] ?? '';

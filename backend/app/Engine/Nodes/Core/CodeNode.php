@@ -2,9 +2,9 @@
 
 namespace App\Engine\Nodes\Core;
 
-use App\Engine\Contracts\NodeHandler;
+use App\Contracts\NodeHandler;
 use App\Engine\NodeResult;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use V8Js;
 use V8JsException;
 use V8JsMemoryLimitException;
@@ -25,7 +25,7 @@ class CodeNode implements NodeHandler
 
     private const DEFAULT_TIME_LIMIT = 30; // 30 seconds
 
-    public function handle(NodePayload $payload): NodeResult
+    public function handle(NodeInput $payload): NodeResult
     {
         $startTime = hrtime(true);
 

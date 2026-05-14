@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Twilio;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Http;
 
 class TwilioNode extends AppNode
@@ -25,7 +25,7 @@ class TwilioNode extends AppNode
         ];
     }
 
-    private function client(NodePayload $payload): \Illuminate\Http\Client\PendingRequest
+    private function client(NodeInput $payload): \Illuminate\Http\Client\PendingRequest
     {
         $accountSid = (string) ($payload->credentials['account_sid'] ?? '');
         $authToken = (string) ($payload->credentials['auth_token'] ?? '');
@@ -37,7 +37,7 @@ class TwilioNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function sendSms(NodePayload $payload): array
+    private function sendSms(NodeInput $payload): array
     {
         $accountSid = (string) ($payload->credentials['account_sid'] ?? '');
         $to = (string) ($payload->inputData['to'] ?? $payload->config['to'] ?? '');
@@ -55,7 +55,7 @@ class TwilioNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function sendWhatsapp(NodePayload $payload): array
+    private function sendWhatsapp(NodeInput $payload): array
     {
         $to = 'whatsapp:'.(string) ($payload->inputData['to'] ?? $payload->config['to'] ?? '');
         $from = 'whatsapp:'.(string) ($payload->inputData['from'] ?? $payload->config['from'] ?? $payload->credentials['from_number'] ?? '');
@@ -72,7 +72,7 @@ class TwilioNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function makeCall(NodePayload $payload): array
+    private function makeCall(NodeInput $payload): array
     {
         $to = (string) ($payload->inputData['to'] ?? $payload->config['to'] ?? '');
         $from = (string) ($payload->config['from'] ?? $payload->credentials['from_number'] ?? '');
@@ -89,7 +89,7 @@ class TwilioNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listMessages(NodePayload $payload): array
+    private function listMessages(NodeInput $payload): array
     {
         $params = array_filter([
             'To' => $payload->config['to'] ?? null,

@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Mongodb;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -37,7 +37,7 @@ class MongodbNode extends AppNode
         ];
     }
 
-    private function client(NodePayload $payload): \Illuminate\Http\Client\PendingRequest
+    private function client(NodeInput $payload): \Illuminate\Http\Client\PendingRequest
     {
         $apiKey = (string) ($payload->credentials['api_key'] ?? $payload->credentials['access_token'] ?? '');
         $baseUrl = rtrim((string) ($payload->credentials['base_url'] ?? 'https://data.mongodb-api.com'), '/');
@@ -48,7 +48,7 @@ class MongodbNode extends AppNode
             ->contentType('application/json');
     }
 
-    private function context(NodePayload $payload): array
+    private function context(NodeInput $payload): array
     {
         return [
             'dataSource' => (string) ($payload->credentials['data_source'] ?? 'Cluster0'),
@@ -60,7 +60,7 @@ class MongodbNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function find(NodePayload $payload): array
+    private function find(NodeInput $payload): array
     {
         $response = $this->client($payload)->post('/action/find', array_merge($this->context($payload), array_filter([
             'filter' => $payload->inputData['filter'] ?? $payload->config['filter'] ?? [],
@@ -78,7 +78,7 @@ class MongodbNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function findOne(NodePayload $payload): array
+    private function findOne(NodeInput $payload): array
     {
         $response = $this->client($payload)->post('/action/findOne', array_merge($this->context($payload), array_filter([
             'filter' => $payload->inputData['filter'] ?? $payload->config['filter'] ?? [],
@@ -93,7 +93,7 @@ class MongodbNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function insertOne(NodePayload $payload): array
+    private function insertOne(NodeInput $payload): array
     {
         $document = $payload->inputData['document'] ?? $payload->config['document'] ?? [];
 
@@ -106,7 +106,7 @@ class MongodbNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function insertMany(NodePayload $payload): array
+    private function insertMany(NodeInput $payload): array
     {
         $documents = $payload->inputData['documents'] ?? $payload->config['documents'] ?? [];
 
@@ -119,7 +119,7 @@ class MongodbNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function updateOne(NodePayload $payload): array
+    private function updateOne(NodeInput $payload): array
     {
         $response = $this->client($payload)->post('/action/updateOne', array_merge($this->context($payload), array_filter([
             'filter' => $payload->inputData['filter'] ?? $payload->config['filter'] ?? [],
@@ -135,7 +135,7 @@ class MongodbNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function updateMany(NodePayload $payload): array
+    private function updateMany(NodeInput $payload): array
     {
         $response = $this->client($payload)->post('/action/updateMany', array_merge($this->context($payload), [
             'filter' => $payload->inputData['filter'] ?? $payload->config['filter'] ?? [],
@@ -150,7 +150,7 @@ class MongodbNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function deleteOne(NodePayload $payload): array
+    private function deleteOne(NodeInput $payload): array
     {
         $response = $this->client($payload)->post('/action/deleteOne', array_merge($this->context($payload), [
             'filter' => $payload->inputData['filter'] ?? $payload->config['filter'] ?? [],
@@ -164,7 +164,7 @@ class MongodbNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function aggregate(NodePayload $payload): array
+    private function aggregate(NodeInput $payload): array
     {
         $response = $this->client($payload)->post('/action/aggregate', array_merge($this->context($payload), [
             'pipeline' => $payload->inputData['pipeline'] ?? $payload->config['pipeline'] ?? [],

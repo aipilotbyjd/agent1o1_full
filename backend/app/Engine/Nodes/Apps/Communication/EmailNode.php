@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Communication;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Mail;
 
 /**
@@ -29,7 +29,7 @@ class EmailNode extends AppNode
     /**
      * Send single email
      */
-    private function send(NodePayload $payload): array
+    private function send(NodeInput $payload): array
     {
         $to = $payload->config['to'] ?? '';
         $subject = $payload->config['subject'] ?? '';
@@ -138,7 +138,7 @@ class EmailNode extends AppNode
     /**
      * Send bulk emails
      */
-    private function sendBulk(NodePayload $payload): array
+    private function sendBulk(NodeInput $payload): array
     {
         $recipients = $payload->config['recipients'] ?? [];
         $subject = $payload->config['subject'] ?? '';

@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Engine\WorkflowEngine;
+use App\Engine\WorkflowRunner;
 use App\Enums\ExecutionStatus;
 use App\Models\Execution;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -36,7 +36,7 @@ class ExecuteWorkflowJob implements ShouldQueue
         $this->onQueue('workflows-default');
     }
 
-    public function handle(WorkflowEngine $engine): void
+    public function handle(WorkflowRunner $engine): void
     {
         $this->execution->refresh();
 

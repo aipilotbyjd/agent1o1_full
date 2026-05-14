@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Data;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 /**
  * Math/Calculate Node
@@ -31,7 +31,7 @@ class MathNode extends AppNode
     /**
      * Basic calculations
      */
-    private function calculate(NodePayload $payload): array
+    private function calculate(NodeInput $payload): array
     {
         $a = $payload->config['a'] ?? 0;
         $b = $payload->config['b'] ?? 0;
@@ -58,7 +58,7 @@ class MathNode extends AppNode
     /**
      * Aggregate operations on arrays
      */
-    private function aggregate(NodePayload $payload): array
+    private function aggregate(NodeInput $payload): array
     {
         $numbers = $payload->config['numbers'] ?? $payload->inputData['numbers'] ?? [];
         $operation = $payload->config['operation'] ?? 'sum';
@@ -99,7 +99,7 @@ class MathNode extends AppNode
     /**
      * Rounding operations
      */
-    private function round(NodePayload $payload): array
+    private function round(NodeInput $payload): array
     {
         $number = $payload->config['number'] ?? 0;
         $operation = $payload->config['operation'] ?? 'round';
@@ -124,7 +124,7 @@ class MathNode extends AppNode
     /**
      * Random number generation
      */
-    private function random(NodePayload $payload): array
+    private function random(NodeInput $payload): array
     {
         $type = $payload->config['type'] ?? 'integer'; // integer | float
         $min = $payload->config['min'] ?? 0;
@@ -151,7 +151,7 @@ class MathNode extends AppNode
     /**
      * Evaluate mathematical formula
      */
-    private function formula(NodePayload $payload): array
+    private function formula(NodeInput $payload): array
     {
         $expression = $payload->config['expression'] ?? '';
         $variables = $payload->config['variables'] ?? [];

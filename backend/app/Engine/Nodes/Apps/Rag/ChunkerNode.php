@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Rag;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 /**
  * Text Chunker Node
@@ -32,7 +32,7 @@ class ChunkerNode extends AppNode
     /**
      * Fixed-size chunking with optional overlap
      */
-    private function chunkFixed(NodePayload $payload): array
+    private function chunkFixed(NodeInput $payload): array
     {
         $documents = $payload->inputData['documents'] ?? [];
         $chunkSize = (int) ($payload->config['chunk_size'] ?? 1000);
@@ -83,7 +83,7 @@ class ChunkerNode extends AppNode
     /**
      * Semantic chunking (respects paragraph and sentence boundaries)
      */
-    private function chunkSemantic(NodePayload $payload): array
+    private function chunkSemantic(NodeInput $payload): array
     {
         $documents = $payload->inputData['documents'] ?? [];
         $maxChunkSize = (int) ($payload->config['max_chunk_size'] ?? 1000);

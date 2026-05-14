@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Data;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Carbon\Carbon;
 
 /**
@@ -35,7 +35,7 @@ class DateTimeNode extends AppNode
     /**
      * Parse date string
      */
-    private function parse(NodePayload $payload): array
+    private function parse(NodeInput $payload): array
     {
         $dateString = $payload->config['date_string'] ?? '';
         $format = $payload->config['format'] ?? null;
@@ -66,7 +66,7 @@ class DateTimeNode extends AppNode
     /**
      * Format date
      */
-    private function format(NodePayload $payload): array
+    private function format(NodeInput $payload): array
     {
         $date = $payload->config['date'] ?? $payload->inputData['date'] ?? 'now';
         $format = $payload->config['format'] ?? 'Y-m-d H:i:s';
@@ -92,7 +92,7 @@ class DateTimeNode extends AppNode
     /**
      * Add time to date
      */
-    private function add(NodePayload $payload): array
+    private function add(NodeInput $payload): array
     {
         $date = $payload->config['date'] ?? 'now';
         $value = (int) ($payload->config['value'] ?? 1);
@@ -126,7 +126,7 @@ class DateTimeNode extends AppNode
     /**
      * Subtract time from date
      */
-    private function subtract(NodePayload $payload): array
+    private function subtract(NodeInput $payload): array
     {
         $date = $payload->config['date'] ?? 'now';
         $value = (int) ($payload->config['value'] ?? 1);
@@ -160,7 +160,7 @@ class DateTimeNode extends AppNode
     /**
      * Calculate difference between dates
      */
-    private function diff(NodePayload $payload): array
+    private function diff(NodeInput $payload): array
     {
         $date1 = $payload->config['date1'] ?? 'now';
         $date2 = $payload->config['date2'] ?? 'now';
@@ -195,7 +195,7 @@ class DateTimeNode extends AppNode
     /**
      * Compare two dates
      */
-    private function compare(NodePayload $payload): array
+    private function compare(NodeInput $payload): array
     {
         $date1 = $payload->config['date1'] ?? 'now';
         $date2 = $payload->config['date2'] ?? 'now';
@@ -228,7 +228,7 @@ class DateTimeNode extends AppNode
     /**
      * Get current date/time
      */
-    private function now(NodePayload $payload): array
+    private function now(NodeInput $payload): array
     {
         $timezone = $payload->config['timezone'] ?? null;
         $format = $payload->config['format'] ?? 'iso8601';
@@ -256,7 +256,7 @@ class DateTimeNode extends AppNode
     /**
      * Convert timezone
      */
-    private function timezone(NodePayload $payload): array
+    private function timezone(NodeInput $payload): array
     {
         $date = $payload->config['date'] ?? 'now';
         $fromTimezone = $payload->config['from_timezone'] ?? null;

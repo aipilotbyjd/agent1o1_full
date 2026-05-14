@@ -2,27 +2,8 @@
 
 namespace App\Engine\Graph;
 
-/**
- * Compiles expression templates at build time and resolves them at runtime.
- *
- * Expressions use the format: {{ $nodes.nodeId.output.path.to.value }}
- *
- * Supported prefixes:
- *   $nodes.{id}.output.{path}  — Upstream node output
- *   $trigger.{path}            — Execution trigger data
- *   $vars.{key}                — Workspace/runtime variable
- *   $env.{key}                 — Config value
- *   $execution.{field}         — Execution metadata
- *   $loop.index                — Current loop iteration index
- *   $loop.item.{path}          — Current loop item data
- */
-class ExpressionParser
+class ExpressionResolver
 {
-    /**
-     * Compile a template string into an array of tokens.
-     *
-     * @return list<array{type: string, value?: string, source?: string, node?: string, path?: list<string>}>
-     */
     public function compile(string $template): array
     {
         if (! str_contains($template, '{{')) {
@@ -37,7 +18,6 @@ class ExpressionParser
             $fullMatch = $match[0][0];
             $expression = trim($match[1][0]);
 
-            // Add leading literal text if any
             if ($matchStart > 0) {
                 $tokens[] = ['type' => 'literal', 'value' => substr($remaining, 0, $matchStart)];
             }
@@ -47,7 +27,6 @@ class ExpressionParser
             $remaining = substr($remaining, $matchStart + strlen($fullMatch));
         }
 
-        // Add trailing literal text if any
         if ($remaining !== '') {
             $tokens[] = ['type' => 'literal', 'value' => $remaining];
         }
@@ -55,20 +34,12 @@ class ExpressionParser
         return $tokens;
     }
 
-    /**
-     * Resolve compiled tokens against runtime data.
-     *
-     * @param  list<array<string, mixed>>  $tokens
-     * @param  array<string, mixed>  $context  Keys: 'nodes', 'trigger', 'vars', 'env', 'execution', 'loop'
-     */
     public function resolve(array $tokens, array $context): mixed
     {
-        // Single-token path expression → return the raw value (preserve type)
         if (count($tokens) === 1 && $tokens[0]['type'] !== 'literal') {
             return $this->resolveToken($tokens[0], $context);
         }
 
-        // Multi-token or mixed → concatenate as string
         $result = '';
         foreach ($tokens as $token) {
             $value = $token['type'] === 'literal'
@@ -81,22 +52,11 @@ class ExpressionParser
         return $result;
     }
 
-    /**
-     * Convenience: compile and immediately resolve a template.
-     *
-     * @param  array<string, mixed>  $context
-     */
     public function evaluate(string $template, array $context): mixed
     {
         return $this->resolve($this->compile($template), $context);
     }
 
-    /**
-     * Recursively compile all string values in an array structure.
-     *
-     * @param  array<string, mixed>  $config
-     * @return array<string, mixed> Same structure with string values replaced by compiled tokens.
-     */
     public function compileConfig(array $config): array
     {
         $compiled = [];
@@ -114,13 +74,6 @@ class ExpressionParser
         return $compiled;
     }
 
-    /**
-     * Recursively resolve all compiled expressions in a config array.
-     *
-     * @param  array<string, mixed>  $config
-     * @param  array<string, mixed>  $context
-     * @return array<string, mixed>
-     */
     public function resolveConfig(array $config, array $context): array
     {
         $resolved = [];
@@ -138,19 +91,22 @@ class ExpressionParser
         return $resolved;
     }
 
-    /**
-     * Check whether a string contains any expression templates.
-     */
-    public function hasExpressions(string $value): bool
+    public function hasExpressions(array $config): bool
     {
-        return str_contains($value, '{{') && str_contains($value, '}}');
+        foreach ($config as $value) {
+            if (is_array($value)) {
+                if (isset($value['__expr'])) {
+                    return true;
+                }
+                if ($this->hasExpressions($value)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
-    /**
-     * Extract all node IDs referenced in a template string.
-     *
-     * @return list<string>
-     */
     public function extractNodeDependencies(string $template): array
     {
         $tokens = $this->compile($template);
@@ -165,16 +121,9 @@ class ExpressionParser
         return array_values(array_unique($nodes));
     }
 
-    /**
-     * Parse a single expression (without {{ }}) into a path token.
-     *
-     * @return array{type: string, source: string, node?: string, path: list<string>}
-     */
     private function parseExpression(string $expression): array
     {
-        // Remove leading $ if present
         $expression = ltrim($expression, '$');
-
         $segments = explode('.', $expression);
         $source = array_shift($segments);
 
@@ -198,9 +147,6 @@ class ExpressionParser
         };
     }
 
-    /**
-     * Resolve a single path token against the runtime context.
-     */
     private function resolveToken(array $token, array $context): mixed
     {
         $source = $token['source'];

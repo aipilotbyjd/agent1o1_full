@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Linear;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -33,7 +33,7 @@ class LinearNode extends AppNode
         ];
     }
 
-    private function query(NodePayload $payload, string $query, array $variables = []): array
+    private function query(NodeInput $payload, string $query, array $variables = []): array
     {
         $apiKey = (string) ($payload->credentials['api_key'] ?? $payload->credentials['access_token'] ?? '');
 
@@ -53,7 +53,7 @@ class LinearNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createIssue(NodePayload $payload): array
+    private function createIssue(NodeInput $payload): array
     {
         $mutation = '
             mutation CreateIssue($input: IssueCreateInput!) {
@@ -80,7 +80,7 @@ class LinearNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function updateIssue(NodePayload $payload): array
+    private function updateIssue(NodeInput $payload): array
     {
         $mutation = '
             mutation UpdateIssue($id: String!, $input: IssueUpdateInput!) {
@@ -106,7 +106,7 @@ class LinearNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listIssues(NodePayload $payload): array
+    private function listIssues(NodeInput $payload): array
     {
         $query = '
             query ListIssues($filter: IssueFilter, $first: Int) {
@@ -127,7 +127,7 @@ class LinearNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getIssue(NodePayload $payload): array
+    private function getIssue(NodeInput $payload): array
     {
         $query = '
             query GetIssue($id: String!) {
@@ -144,7 +144,7 @@ class LinearNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listTeams(NodePayload $payload): array
+    private function listTeams(NodeInput $payload): array
     {
         $query = '
             query ListTeams {
@@ -160,7 +160,7 @@ class LinearNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createComment(NodePayload $payload): array
+    private function createComment(NodeInput $payload): array
     {
         $mutation = '
             mutation CreateComment($input: CommentCreateInput!) {

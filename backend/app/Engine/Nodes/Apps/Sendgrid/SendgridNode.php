@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Sendgrid;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Http;
 
 class SendgridNode extends AppNode
@@ -26,7 +26,7 @@ class SendgridNode extends AppNode
         ];
     }
 
-    private function client(NodePayload $payload): \Illuminate\Http\Client\PendingRequest
+    private function client(NodeInput $payload): \Illuminate\Http\Client\PendingRequest
     {
         $apiKey = (string) ($payload->credentials['api_key'] ?? $payload->credentials['access_token'] ?? '');
 
@@ -36,7 +36,7 @@ class SendgridNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function sendEmail(NodePayload $payload): array
+    private function sendEmail(NodeInput $payload): array
     {
         $to = $payload->inputData['to'] ?? $payload->config['to'] ?? '';
         $from = $payload->inputData['from'] ?? $payload->config['from'] ?? $payload->credentials['from_email'] ?? '';
@@ -62,7 +62,7 @@ class SendgridNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function addContact(NodePayload $payload): array
+    private function addContact(NodeInput $payload): array
     {
         $contacts = [$payload->inputData['contact'] ?? array_filter([
             'email' => $payload->inputData['email'] ?? $payload->config['email'] ?? '',
@@ -85,7 +85,7 @@ class SendgridNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listContacts(NodePayload $payload): array
+    private function listContacts(NodeInput $payload): array
     {
         $response = $this->client($payload)->get('/marketing/contacts', [
             'page_size' => $payload->config['limit'] ?? 25,
@@ -99,7 +99,7 @@ class SendgridNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createList(NodePayload $payload): array
+    private function createList(NodeInput $payload): array
     {
         $name = (string) ($payload->inputData['name'] ?? $payload->config['name'] ?? '');
 
@@ -112,7 +112,7 @@ class SendgridNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listLists(NodePayload $payload): array
+    private function listLists(NodeInput $payload): array
     {
         $response = $this->client($payload)->get('/marketing/lists', ['page_size' => $payload->config['limit'] ?? 20]);
         $response->throw();

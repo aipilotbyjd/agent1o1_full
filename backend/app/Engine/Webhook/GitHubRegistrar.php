@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Engine\WebhookRegistrars;
+namespace App\Engine\Webhook;
 
-use App\Engine\Contracts\RegisterableWebhook;
+use App\Contracts\WebhookRegistrar;
 use Illuminate\Support\Facades\Http;
 
-class GitHubWebhookRegistrar implements RegisterableWebhook
+class GitHubRegistrar implements WebhookRegistrar
 {
     private const BASE_URL = 'https://api.github.com';
 

@@ -2,8 +2,8 @@
 
 namespace App\Engine;
 
-use App\Engine\Contracts\NodeHandler;
-use App\Engine\Enums\NodeType;
+use App\Contracts\NodeHandler;
+use App\Enums\NodeType;
 use Illuminate\Support\Str;
 
 /**
@@ -21,7 +21,7 @@ use Illuminate\Support\Str;
  * The operation (after the dot) is passed via $payload->config['operation']
  * and handled inside the node class via a match() statement.
  */
-class NodeRegistry
+class NodeCatalog
 {
     /** @var array<string, class-string<NodeHandler>> */
     private static array $cache = [];

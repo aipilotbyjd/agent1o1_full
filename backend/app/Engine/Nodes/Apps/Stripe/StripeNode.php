@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Stripe;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
@@ -27,7 +27,7 @@ class StripeNode extends AppNode
         ];
     }
 
-    private function client(NodePayload $payload): PendingRequest
+    private function client(NodeInput $payload): PendingRequest
     {
         $secretKey = $payload->credentials['secret_key'] ?? $payload->credentials['api_key'] ?? '';
 
@@ -39,7 +39,7 @@ class StripeNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createCustomer(NodePayload $payload): array
+    private function createCustomer(NodeInput $payload): array
     {
         $config = $payload->config;
         $data = array_filter([
@@ -65,7 +65,7 @@ class StripeNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createInvoice(NodePayload $payload): array
+    private function createInvoice(NodeInput $payload): array
     {
         $config = $payload->config;
 
@@ -88,7 +88,7 @@ class StripeNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listPayments(NodePayload $payload): array
+    private function listPayments(NodeInput $payload): array
     {
         $config = $payload->config;
 
@@ -115,7 +115,7 @@ class StripeNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createCharge(NodePayload $payload): array
+    private function createCharge(NodeInput $payload): array
     {
         $config = $payload->config;
 
@@ -138,7 +138,7 @@ class StripeNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getBalance(NodePayload $payload): array
+    private function getBalance(NodeInput $payload): array
     {
         $response = $this->client($payload)
             ->get(self::BASE_URL.'/balance');

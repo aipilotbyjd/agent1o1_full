@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\GitHub;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 class GitHubNode extends AppNode
 {
@@ -38,7 +38,7 @@ class GitHubNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listRepos(NodePayload $payload): array
+    private function listRepos(NodeInput $payload): array
     {
         $config = $payload->config;
         $perPage = (int) ($config['per_page'] ?? 30);
@@ -60,7 +60,7 @@ class GitHubNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createIssue(NodePayload $payload): array
+    private function createIssue(NodeInput $payload): array
     {
         $config = $payload->config;
         $owner = $config['owner'] ?? '';
@@ -89,7 +89,7 @@ class GitHubNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listIssues(NodePayload $payload): array
+    private function listIssues(NodeInput $payload): array
     {
         $config = $payload->config;
         $owner = $config['owner'] ?? '';
@@ -113,7 +113,7 @@ class GitHubNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createPullRequest(NodePayload $payload): array
+    private function createPullRequest(NodeInput $payload): array
     {
         $config = $payload->config;
         $owner = $config['owner'] ?? '';

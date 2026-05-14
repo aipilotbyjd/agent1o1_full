@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Notion;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 class NotionNode extends AppNode
 {
@@ -33,7 +33,7 @@ class NotionNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createPage(NodePayload $payload): array
+    private function createPage(NodeInput $payload): array
     {
         $config = $payload->config;
         $databaseId = $config['database_id'] ?? '';
@@ -60,7 +60,7 @@ class NotionNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function queryDatabase(NodePayload $payload): array
+    private function queryDatabase(NodeInput $payload): array
     {
         $config = $payload->config;
         $databaseId = $config['database_id'] ?? '';
@@ -86,7 +86,7 @@ class NotionNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function updatePage(NodePayload $payload): array
+    private function updatePage(NodeInput $payload): array
     {
         $config = $payload->config;
         $pageId = $config['page_id'] ?? '';

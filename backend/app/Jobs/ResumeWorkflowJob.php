@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Engine\WorkflowEngine;
+use App\Engine\WorkflowRunner;
 use App\Enums\ExecutionStatus;
 use App\Models\Execution;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -32,7 +32,7 @@ class ResumeWorkflowJob implements ShouldQueue
         $this->onQueue('workflows-resume');
     }
 
-    public function handle(WorkflowEngine $engine): void
+    public function handle(WorkflowRunner $engine): void
     {
         $this->execution->refresh();
 

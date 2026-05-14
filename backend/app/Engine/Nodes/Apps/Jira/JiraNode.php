@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Jira;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Http;
 
 class JiraNode extends AppNode
@@ -26,7 +26,7 @@ class JiraNode extends AppNode
         ];
     }
 
-    private function client(NodePayload $payload): \Illuminate\Http\Client\PendingRequest
+    private function client(NodeInput $payload): \Illuminate\Http\Client\PendingRequest
     {
         $domain = rtrim((string) ($payload->credentials['domain'] ?? ''), '/');
         $email = (string) ($payload->credentials['email'] ?? '');
@@ -41,7 +41,7 @@ class JiraNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createIssue(NodePayload $payload): array
+    private function createIssue(NodeInput $payload): array
     {
         $projectKey = (string) ($payload->inputData['project_key'] ?? $payload->config['project_key'] ?? '');
         $issueType = (string) ($payload->config['issue_type'] ?? 'Task');
@@ -71,7 +71,7 @@ class JiraNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function updateIssue(NodePayload $payload): array
+    private function updateIssue(NodeInput $payload): array
     {
         $issueKey = (string) ($payload->inputData['issue_key'] ?? $payload->config['issue_key'] ?? '');
 
@@ -89,7 +89,7 @@ class JiraNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getIssue(NodePayload $payload): array
+    private function getIssue(NodeInput $payload): array
     {
         $issueKey = (string) ($payload->inputData['issue_key'] ?? $payload->config['issue_key'] ?? '');
 
@@ -102,7 +102,7 @@ class JiraNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function searchIssues(NodePayload $payload): array
+    private function searchIssues(NodeInput $payload): array
     {
         $jql = (string) ($payload->inputData['jql'] ?? $payload->config['jql'] ?? '');
         $maxResults = (int) ($payload->config['limit'] ?? 50);
@@ -124,7 +124,7 @@ class JiraNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function addComment(NodePayload $payload): array
+    private function addComment(NodeInput $payload): array
     {
         $issueKey = (string) ($payload->inputData['issue_key'] ?? $payload->config['issue_key'] ?? '');
         $body = (string) ($payload->inputData['body'] ?? $payload->inputData['comment'] ?? $payload->config['body'] ?? '');
@@ -145,7 +145,7 @@ class JiraNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function transitionIssue(NodePayload $payload): array
+    private function transitionIssue(NodeInput $payload): array
     {
         $issueKey = (string) ($payload->inputData['issue_key'] ?? $payload->config['issue_key'] ?? '');
         $transitionId = (string) ($payload->inputData['transition_id'] ?? $payload->config['transition_id'] ?? '');
@@ -162,7 +162,7 @@ class JiraNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listProjects(NodePayload $payload): array
+    private function listProjects(NodeInput $payload): array
     {
         $response = $this->client($payload)->get('/project/search', [
             'maxResults' => $payload->config['limit'] ?? 50,

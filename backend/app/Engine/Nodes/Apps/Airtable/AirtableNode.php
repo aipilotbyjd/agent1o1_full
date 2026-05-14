@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Airtable;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 class AirtableNode extends AppNode
 {
@@ -28,7 +28,7 @@ class AirtableNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listRecords(NodePayload $payload): array
+    private function listRecords(NodeInput $payload): array
     {
         $config = $payload->config;
         $baseId = $config['base_id'];
@@ -60,7 +60,7 @@ class AirtableNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getRecord(NodePayload $payload): array
+    private function getRecord(NodeInput $payload): array
     {
         $config = $payload->config;
         $baseId = $config['base_id'];
@@ -78,7 +78,7 @@ class AirtableNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createRecord(NodePayload $payload): array
+    private function createRecord(NodeInput $payload): array
     {
         $config = $payload->config;
         $baseId = $config['base_id'];
@@ -98,7 +98,7 @@ class AirtableNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function updateRecord(NodePayload $payload): array
+    private function updateRecord(NodeInput $payload): array
     {
         $config = $payload->config;
         $baseId = $config['base_id'];
@@ -119,7 +119,7 @@ class AirtableNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function deleteRecord(NodePayload $payload): array
+    private function deleteRecord(NodeInput $payload): array
     {
         $config = $payload->config;
         $baseId = $config['base_id'];

@@ -11,7 +11,7 @@ use App\Agents\Internal\VisionAgent;
 use App\Agents\Internal\WorkflowAgent;
 use App\Agents\Tools\WorkflowNodeTool;
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use App\Models\Node;
 use Laravel\Ai\Audio;
 use Laravel\Ai\Embeddings;
@@ -54,7 +54,7 @@ class LlmNode extends AppNode
     /**
      * Resolve the Lab enum for the configured provider.
      */
-    private function resolveProvider(NodePayload $payload): ?Lab
+    private function resolveProvider(NodeInput $payload): ?Lab
     {
         $provider = $payload->config['provider'] ?? null;
 
@@ -68,7 +68,7 @@ class LlmNode extends AppNode
     /**
      * Get the model string from config.
      */
-    private function resolveModel(NodePayload $payload): ?string
+    private function resolveModel(NodeInput $payload): ?string
     {
         return $payload->config['model'] ?? null;
     }
@@ -78,7 +78,7 @@ class LlmNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function chatCompletion(NodePayload $payload): array
+    private function chatCompletion(NodeInput $payload): array
     {
         $prompt = $payload->inputData['prompt'] ?? $payload->config['prompt'] ?? '';
         $systemPrompt = $payload->config['system_prompt'] ?? 'You are a helpful assistant.';
@@ -103,7 +103,7 @@ class LlmNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function textClassifier(NodePayload $payload): array
+    private function textClassifier(NodeInput $payload): array
     {
         $text = $payload->inputData['text'] ?? $payload->config['text'] ?? '';
         $categories = $payload->config['categories'] ?? [];
@@ -127,7 +127,7 @@ class LlmNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function summarizer(NodePayload $payload): array
+    private function summarizer(NodeInput $payload): array
     {
         $text = $payload->inputData['text'] ?? $payload->config['text'] ?? '';
         $format = $payload->config['format'] ?? 'paragraph';
@@ -151,7 +151,7 @@ class LlmNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function sentiment(NodePayload $payload): array
+    private function sentiment(NodeInput $payload): array
     {
         $text = $payload->inputData['text'] ?? $payload->config['text'] ?? '';
 
@@ -175,7 +175,7 @@ class LlmNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function structuredExtract(NodePayload $payload): array
+    private function structuredExtract(NodeInput $payload): array
     {
         $text = $payload->inputData['text'] ?? $payload->config['text'] ?? '';
         $schema = $payload->config['schema'] ?? [];
@@ -198,7 +198,7 @@ class LlmNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function vision(NodePayload $payload): array
+    private function vision(NodeInput $payload): array
     {
         $prompt = $payload->inputData['prompt'] ?? $payload->config['prompt'] ?? 'Describe this image.';
         $imageUrl = $payload->inputData['image_url'] ?? $payload->config['image_url'] ?? null;
@@ -228,7 +228,7 @@ class LlmNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function embeddings(NodePayload $payload): array
+    private function embeddings(NodeInput $payload): array
     {
         $input = $payload->inputData['text'] ?? $payload->config['text'] ?? '';
         $inputs = is_array($input) ? $input : [$input];
@@ -256,7 +256,7 @@ class LlmNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function imageGeneration(NodePayload $payload): array
+    private function imageGeneration(NodeInput $payload): array
     {
         $prompt = $payload->inputData['prompt'] ?? $payload->config['prompt'] ?? '';
         $provider = $this->resolveProvider($payload);
@@ -282,7 +282,7 @@ class LlmNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function tts(NodePayload $payload): array
+    private function tts(NodeInput $payload): array
     {
         $text = $payload->inputData['text'] ?? $payload->config['text'] ?? '';
         $voice = $payload->config['voice'] ?? 'alloy';
@@ -307,7 +307,7 @@ class LlmNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function transcribe(NodePayload $payload): array
+    private function transcribe(NodeInput $payload): array
     {
         $audioUrl = $payload->inputData['audio_url'] ?? $payload->config['audio_url'] ?? '';
         $provider = $this->resolveProvider($payload);
@@ -333,7 +333,7 @@ class LlmNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function agent(NodePayload $payload): array
+    private function agent(NodeInput $payload): array
     {
         $prompt = $payload->inputData['prompt'] ?? '';
         $systemPrompt = $payload->config['system_prompt'] ?? 'You are a helpful AI assistant that can use tools to accomplish tasks.';
@@ -363,7 +363,7 @@ class LlmNode extends AppNode
      * @param  list<string>  $nodeTypes
      * @return list<WorkflowNodeTool>
      */
-    private function buildTools(array $nodeTypes, NodePayload $payload): array
+    private function buildTools(array $nodeTypes, NodeInput $payload): array
     {
         $tools = [];
 

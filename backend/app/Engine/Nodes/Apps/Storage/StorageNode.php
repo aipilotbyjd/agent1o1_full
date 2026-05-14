@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Storage;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Storage;
 
 class StorageNode extends AppNode
@@ -26,7 +26,7 @@ class StorageNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function readFile(NodePayload $payload): array
+    private function readFile(NodeInput $payload): array
     {
         $disk = $payload->config['disk'] ?? 'local';
         $path = $payload->config['path'] ?? '';
@@ -61,7 +61,7 @@ class StorageNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function writeFile(NodePayload $payload): array
+    private function writeFile(NodeInput $payload): array
     {
         $disk = $payload->config['disk'] ?? 'local';
         $path = $payload->config['path'] ?? '';

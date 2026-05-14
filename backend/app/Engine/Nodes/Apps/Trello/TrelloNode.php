@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Trello;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Http;
 
 class TrelloNode extends AppNode
@@ -28,7 +28,7 @@ class TrelloNode extends AppNode
         ];
     }
 
-    private function auth(NodePayload $payload): array
+    private function auth(NodeInput $payload): array
     {
         return [
             'key' => (string) ($payload->credentials['api_key'] ?? ''),
@@ -39,7 +39,7 @@ class TrelloNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createCard(NodePayload $payload): array
+    private function createCard(NodeInput $payload): array
     {
         $response = Http::get(self::BASE_URL.'/cards', array_merge($this->auth($payload), array_filter([
             'idList' => $payload->inputData['list_id'] ?? $payload->config['list_id'] ?? '',
@@ -65,7 +65,7 @@ class TrelloNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function updateCard(NodePayload $payload): array
+    private function updateCard(NodeInput $payload): array
     {
         $cardId = (string) ($payload->inputData['card_id'] ?? $payload->config['card_id'] ?? '');
 
@@ -84,7 +84,7 @@ class TrelloNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getCard(NodePayload $payload): array
+    private function getCard(NodeInput $payload): array
     {
         $cardId = (string) ($payload->inputData['card_id'] ?? $payload->config['card_id'] ?? '');
 
@@ -97,7 +97,7 @@ class TrelloNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listCards(NodePayload $payload): array
+    private function listCards(NodeInput $payload): array
     {
         $listId = (string) ($payload->inputData['list_id'] ?? $payload->config['list_id'] ?? '');
 
@@ -110,7 +110,7 @@ class TrelloNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createList(NodePayload $payload): array
+    private function createList(NodeInput $payload): array
     {
         $response = Http::post(self::BASE_URL.'/lists', array_merge($this->auth($payload), [
             'name' => $payload->inputData['name'] ?? $payload->config['name'] ?? 'New List',
@@ -126,7 +126,7 @@ class TrelloNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getBoard(NodePayload $payload): array
+    private function getBoard(NodeInput $payload): array
     {
         $boardId = (string) ($payload->inputData['board_id'] ?? $payload->config['board_id'] ?? '');
 
@@ -141,7 +141,7 @@ class TrelloNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listBoards(NodePayload $payload): array
+    private function listBoards(NodeInput $payload): array
     {
         $response = Http::get(self::BASE_URL.'/members/me/boards', array_merge($this->auth($payload), [
             'filter' => 'open',

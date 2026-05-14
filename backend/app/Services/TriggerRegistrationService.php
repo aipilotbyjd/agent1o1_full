@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Engine\Contracts\RegisterableWebhook;
-use App\Engine\WebhookRegistrars\WebhookRegistrarRegistry;
+use App\Contracts\WebhookRegistrar;
+use App\Engine\Webhook\WebhookRegistry;
 use App\Models\Trigger;
 use Illuminate\Support\Facades\Log;
 
@@ -144,9 +144,9 @@ class TriggerRegistrationService
         }
     }
 
-    private function getRegistrar(string $service): ?RegisterableWebhook
+    private function getRegistrar(string $service): ?WebhookRegistrar
     {
-        return WebhookRegistrarRegistry::resolveRegisterable($service);
+        return WebhookRegistry::resolveRegisterable($service);
     }
 
     private function getCallbackUrl(Trigger $trigger): string

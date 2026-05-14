@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Data;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 /**
  * Filter Node
@@ -30,7 +30,7 @@ class FilterNode extends AppNode
     /**
      * Filter items by condition
      */
-    private function filterByCondition(NodePayload $payload): array
+    private function filterByCondition(NodeInput $payload): array
     {
         $items = $payload->inputData['items'] ?? [];
         $field = $payload->config['field'] ?? '';
@@ -63,7 +63,7 @@ class FilterNode extends AppNode
     /**
      * Filter by specific values
      */
-    private function filterByValue(NodePayload $payload): array
+    private function filterByValue(NodeInput $payload): array
     {
         $items = $payload->inputData['items'] ?? [];
         $field = $payload->config['field'] ?? '';
@@ -95,7 +95,7 @@ class FilterNode extends AppNode
     /**
      * Remove duplicate items
      */
-    private function removeDuplicates(NodePayload $payload): array
+    private function removeDuplicates(NodeInput $payload): array
     {
         $items = $payload->inputData['items'] ?? [];
         $field = $payload->config['field'] ?? null; // null = compare entire object
@@ -126,7 +126,7 @@ class FilterNode extends AppNode
     /**
      * Remove empty/null values
      */
-    private function removeEmpty(NodePayload $payload): array
+    private function removeEmpty(NodeInput $payload): array
     {
         $items = $payload->inputData['items'] ?? [];
         $field = $payload->config['field'] ?? null;

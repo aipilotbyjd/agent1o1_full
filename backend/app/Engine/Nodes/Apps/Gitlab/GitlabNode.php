@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Gitlab;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 class GitlabNode extends AppNode
 {
@@ -28,7 +28,7 @@ class GitlabNode extends AppNode
         ];
     }
 
-    private function client(NodePayload $payload): \Illuminate\Http\Client\PendingRequest
+    private function client(NodeInput $payload): \Illuminate\Http\Client\PendingRequest
     {
         $token = (string) ($payload->credentials['access_token'] ?? $payload->credentials['private_token'] ?? '');
         $baseUrl = rtrim((string) ($payload->credentials['base_url'] ?? self::BASE_URL), '/');
@@ -37,7 +37,7 @@ class GitlabNode extends AppNode
             ->withHeader('PRIVATE-TOKEN', $token);
     }
 
-    private function projectId(NodePayload $payload): string
+    private function projectId(NodeInput $payload): string
     {
         return (string) ($payload->inputData['project_id'] ?? $payload->config['project_id'] ?? '');
     }
@@ -45,7 +45,7 @@ class GitlabNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createIssue(NodePayload $payload): array
+    private function createIssue(NodeInput $payload): array
     {
         $project = urlencode($this->projectId($payload));
 
@@ -65,7 +65,7 @@ class GitlabNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listIssues(NodePayload $payload): array
+    private function listIssues(NodeInput $payload): array
     {
         $project = urlencode($this->projectId($payload));
 
@@ -82,7 +82,7 @@ class GitlabNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function updateIssue(NodePayload $payload): array
+    private function updateIssue(NodeInput $payload): array
     {
         $project = urlencode($this->projectId($payload));
         $issueIid = (string) ($payload->inputData['issue_iid'] ?? $payload->config['issue_iid'] ?? '');
@@ -101,7 +101,7 @@ class GitlabNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createMergeRequest(NodePayload $payload): array
+    private function createMergeRequest(NodeInput $payload): array
     {
         $project = urlencode($this->projectId($payload));
 
@@ -121,7 +121,7 @@ class GitlabNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listProjects(NodePayload $payload): array
+    private function listProjects(NodeInput $payload): array
     {
         $response = $this->client($payload)->get('/projects', array_filter([
             'membership' => true,
@@ -137,7 +137,7 @@ class GitlabNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getProject(NodePayload $payload): array
+    private function getProject(NodeInput $payload): array
     {
         $project = urlencode($this->projectId($payload));
         $response = $this->client($payload)->get("/projects/{$project}");
@@ -149,7 +149,7 @@ class GitlabNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listPipelines(NodePayload $payload): array
+    private function listPipelines(NodeInput $payload): array
     {
         $project = urlencode($this->projectId($payload));
 
@@ -166,7 +166,7 @@ class GitlabNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function triggerPipeline(NodePayload $payload): array
+    private function triggerPipeline(NodeInput $payload): array
     {
         $project = urlencode($this->projectId($payload));
         $ref = (string) ($payload->inputData['ref'] ?? $payload->config['ref'] ?? 'main');

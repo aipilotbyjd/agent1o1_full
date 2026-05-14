@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Dropbox;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -38,12 +38,12 @@ class DropboxNode extends AppNode
         ];
     }
 
-    private function token(NodePayload $payload): string
+    private function token(NodeInput $payload): string
     {
         return (string) ($payload->credentials['access_token'] ?? '');
     }
 
-    private function api(NodePayload $payload): \Illuminate\Http\Client\PendingRequest
+    private function api(NodeInput $payload): \Illuminate\Http\Client\PendingRequest
     {
         return Http::withToken($this->token($payload))->baseUrl(self::API_URL);
     }
@@ -51,7 +51,7 @@ class DropboxNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listFolder(NodePayload $payload): array
+    private function listFolder(NodeInput $payload): array
     {
         $path = (string) ($payload->inputData['path'] ?? $payload->config['path'] ?? '');
         $recursive = (bool) ($payload->config['recursive'] ?? false);
@@ -74,7 +74,7 @@ class DropboxNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function upload(NodePayload $payload): array
+    private function upload(NodeInput $payload): array
     {
         $path = (string) ($payload->inputData['path'] ?? $payload->config['path'] ?? '');
         $content = (string) ($payload->inputData['content'] ?? $payload->config['content'] ?? '');
@@ -102,7 +102,7 @@ class DropboxNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function download(NodePayload $payload): array
+    private function download(NodeInput $payload): array
     {
         $path = (string) ($payload->inputData['path'] ?? $payload->config['path'] ?? '');
         $apiArg = json_encode(['path' => $path]);
@@ -125,7 +125,7 @@ class DropboxNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function delete(NodePayload $payload): array
+    private function delete(NodeInput $payload): array
     {
         $path = (string) ($payload->inputData['path'] ?? $payload->config['path'] ?? '');
 
@@ -138,7 +138,7 @@ class DropboxNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createFolder(NodePayload $payload): array
+    private function createFolder(NodeInput $payload): array
     {
         $path = (string) ($payload->inputData['path'] ?? $payload->config['path'] ?? '');
         $autorename = (bool) ($payload->config['autorename'] ?? false);
@@ -152,7 +152,7 @@ class DropboxNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function move(NodePayload $payload): array
+    private function move(NodeInput $payload): array
     {
         $from = (string) ($payload->inputData['from'] ?? $payload->config['from'] ?? '');
         $to = (string) ($payload->inputData['to'] ?? $payload->config['to'] ?? '');
@@ -166,7 +166,7 @@ class DropboxNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function copy(NodePayload $payload): array
+    private function copy(NodeInput $payload): array
     {
         $from = (string) ($payload->inputData['from'] ?? $payload->config['from'] ?? '');
         $to = (string) ($payload->inputData['to'] ?? $payload->config['to'] ?? '');
@@ -180,7 +180,7 @@ class DropboxNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getMetadata(NodePayload $payload): array
+    private function getMetadata(NodeInput $payload): array
     {
         $path = (string) ($payload->inputData['path'] ?? $payload->config['path'] ?? '');
 
@@ -193,7 +193,7 @@ class DropboxNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function search(NodePayload $payload): array
+    private function search(NodeInput $payload): array
     {
         $query = (string) ($payload->inputData['query'] ?? $payload->config['query'] ?? '');
         $path = (string) ($payload->config['path'] ?? '');
@@ -217,7 +217,7 @@ class DropboxNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getSharedLink(NodePayload $payload): array
+    private function getSharedLink(NodeInput $payload): array
     {
         $path = (string) ($payload->inputData['path'] ?? $payload->config['path'] ?? '');
 

@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Discord;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Http;
 
 class DiscordNode extends AppNode
@@ -23,7 +23,7 @@ class DiscordNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function sendMessage(NodePayload $payload): array
+    private function sendMessage(NodeInput $payload): array
     {
         $config = $payload->config;
         $webhookUrl = $config['webhook_url'] ?? '';

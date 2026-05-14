@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Rag;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -34,7 +34,7 @@ class DocumentLoaderNode extends AppNode
     /**
      * Load plain text content
      */
-    private function loadText(NodePayload $payload): array
+    private function loadText(NodeInput $payload): array
     {
         $text = $payload->config['text'] ?? '';
         $documentId = $payload->config['document_id'] ?? Str::uuid()->toString();
@@ -61,7 +61,7 @@ class DocumentLoaderNode extends AppNode
     /**
      * Load content from a URL
      */
-    private function loadUrl(NodePayload $payload): array
+    private function loadUrl(NodeInput $payload): array
     {
         $url = $payload->config['url'] ?? '';
         $documentId = $payload->config['document_id'] ?? Str::uuid()->toString();
@@ -107,7 +107,7 @@ class DocumentLoaderNode extends AppNode
     /**
      * Load content from a file path
      */
-    private function loadFile(NodePayload $payload): array
+    private function loadFile(NodeInput $payload): array
     {
         $filePath = $payload->config['file_path'] ?? '';
         $documentId = $payload->config['document_id'] ?? Str::uuid()->toString();

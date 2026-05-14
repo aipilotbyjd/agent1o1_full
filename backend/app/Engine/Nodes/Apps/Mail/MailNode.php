@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Mail;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Mail\Message;
 use Illuminate\Support\Facades\Mail as MailFacade;
 
@@ -24,7 +24,7 @@ class MailNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function sendEmail(NodePayload $payload): array
+    private function sendEmail(NodeInput $payload): array
     {
         $config = $payload->config;
         $to = $config['to'] ?? '';

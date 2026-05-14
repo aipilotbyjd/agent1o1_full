@@ -2,16 +2,16 @@
 
 namespace App\Engine\Nodes\Flow;
 
-use App\Engine\Contracts\NodeHandler;
+use App\Contracts\NodeHandler;
 use App\Engine\NodeResult;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 /**
  * Merges data from multiple upstream branches into a single output.
  */
 class MergeNode implements NodeHandler
 {
-    public function handle(NodePayload $payload): NodeResult
+    public function handle(NodeInput $payload): NodeResult
     {
         $startTime = hrtime(true);
 

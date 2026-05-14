@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Google;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 /**
  * Handles all Google Sheets operations: get_rows, append_row, update_row.
@@ -34,7 +34,7 @@ class GoogleSheetsNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getRows(NodePayload $payload): array
+    private function getRows(NodeInput $payload): array
     {
         $config = $payload->config;
         $spreadsheetId = $config['spreadsheet_id'];
@@ -66,7 +66,7 @@ class GoogleSheetsNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function appendRow(NodePayload $payload): array
+    private function appendRow(NodeInput $payload): array
     {
         $config = $payload->config;
         $spreadsheetId = $config['spreadsheet_id'];
@@ -97,7 +97,7 @@ class GoogleSheetsNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function updateRow(NodePayload $payload): array
+    private function updateRow(NodeInput $payload): array
     {
         $config = $payload->config;
         $spreadsheetId = $config['spreadsheet_id'];
@@ -128,7 +128,7 @@ class GoogleSheetsNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function clearRange(NodePayload $payload): array
+    private function clearRange(NodeInput $payload): array
     {
         $config = $payload->config;
         $spreadsheetId = $config['spreadsheet_id'];
@@ -147,7 +147,7 @@ class GoogleSheetsNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function deleteRows(NodePayload $payload): array
+    private function deleteRows(NodeInput $payload): array
     {
         $config = $payload->config;
         $spreadsheetId = $config['spreadsheet_id'];
@@ -181,7 +181,7 @@ class GoogleSheetsNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function lookupRows(NodePayload $payload): array
+    private function lookupRows(NodeInput $payload): array
     {
         $result = $this->getRows($payload);
 
@@ -203,7 +203,7 @@ class GoogleSheetsNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createSpreadsheet(NodePayload $payload): array
+    private function createSpreadsheet(NodeInput $payload): array
     {
         $title = $payload->config['title'] ?? 'Untitled Spreadsheet';
 
@@ -226,7 +226,7 @@ class GoogleSheetsNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getSpreadsheetInfo(NodePayload $payload): array
+    private function getSpreadsheetInfo(NodeInput $payload): array
     {
         $spreadsheetId = $payload->config['spreadsheet_id'];
 
