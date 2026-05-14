@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Agents\Contracts;
+namespace App\Contracts;
 
 interface AgentRunnable
 {

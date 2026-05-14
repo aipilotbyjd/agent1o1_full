@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Agents\Runner\AgentRunner;
+use App\Agents\AgentRunner;
 use App\Models\Agent;
 use App\Models\User;
 use Illuminate\Support\Str;

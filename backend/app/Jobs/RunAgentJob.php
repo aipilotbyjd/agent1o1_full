@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Agents\Runner\AgentRunner;
+use App\Agents\AgentRunner;
 use App\Agents\Skills\SkillContextBuilder;
 use App\Models\Agent;
 use App\Models\AgentTrigger;
