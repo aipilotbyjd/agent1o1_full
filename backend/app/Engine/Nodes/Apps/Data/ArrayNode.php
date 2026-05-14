@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Data;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 /**
  * Array Operations Node
@@ -34,7 +34,7 @@ class ArrayNode extends AppNode
     /**
      * Map - Extract/transform specific fields from each item
      */
-    private function map(NodePayload $payload): array
+    private function map(NodeInput $payload): array
     {
         $items = $payload->inputData['items'] ?? [];
         $fields = $payload->config['fields'] ?? []; // ['new_name' => 'source.path']
@@ -67,7 +67,7 @@ class ArrayNode extends AppNode
     /**
      * Reduce - Aggregate array into single value
      */
-    private function reduce(NodePayload $payload): array
+    private function reduce(NodeInput $payload): array
     {
         $items = $payload->inputData['items'] ?? [];
         $operation = $payload->config['operation'] ?? 'sum'; // sum | avg | min | max | count | concat
@@ -103,7 +103,7 @@ class ArrayNode extends AppNode
     /**
      * Sort array by field
      */
-    private function sort(NodePayload $payload): array
+    private function sort(NodeInput $payload): array
     {
         $items = $payload->inputData['items'] ?? [];
         $field = $payload->config['field'] ?? null;
@@ -141,7 +141,7 @@ class ArrayNode extends AppNode
     /**
      * Group items by field value
      */
-    private function groupBy(NodePayload $payload): array
+    private function groupBy(NodeInput $payload): array
     {
         $items = $payload->inputData['items'] ?? [];
         $field = $payload->config['field'] ?? '';
@@ -172,7 +172,7 @@ class ArrayNode extends AppNode
     /**
      * Get unique values
      */
-    private function unique(NodePayload $payload): array
+    private function unique(NodeInput $payload): array
     {
         $items = $payload->inputData['items'] ?? [];
         $field = $payload->config['field'] ?? null;
@@ -200,7 +200,7 @@ class ArrayNode extends AppNode
     /**
      * Flatten nested arrays
      */
-    private function flatten(NodePayload $payload): array
+    private function flatten(NodeInput $payload): array
     {
         $items = $payload->inputData['items'] ?? [];
         $depth = (int) ($payload->config['depth'] ?? -1); // -1 = infinite
@@ -220,7 +220,7 @@ class ArrayNode extends AppNode
     /**
      * Slice array (get subset)
      */
-    private function slice(NodePayload $payload): array
+    private function slice(NodeInput $payload): array
     {
         $items = $payload->inputData['items'] ?? [];
         $start = (int) ($payload->config['start'] ?? 0);
@@ -243,7 +243,7 @@ class ArrayNode extends AppNode
     /**
      * Chunk array into smaller arrays
      */
-    private function chunk(NodePayload $payload): array
+    private function chunk(NodeInput $payload): array
     {
         $items = $payload->inputData['items'] ?? [];
         $size = (int) ($payload->config['size'] ?? 10);

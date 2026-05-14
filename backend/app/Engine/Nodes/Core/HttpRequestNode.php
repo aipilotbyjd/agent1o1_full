@@ -2,9 +2,9 @@
 
 namespace App\Engine\Nodes\Core;
 
-use App\Engine\Contracts\NodeHandler;
+use App\Contracts\NodeHandler;
 use App\Engine\NodeResult;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Http;
  */
 class HttpRequestNode implements NodeHandler
 {
-    public function handle(NodePayload $payload): NodeResult
+    public function handle(NodeInput $payload): NodeResult
     {
         $startTime = hrtime(true);
 

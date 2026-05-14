@@ -2,59 +2,46 @@
 
 namespace App\Engine;
 
-use App\Engine\Contracts\SuspendsExecution;
-use App\Engine\Enums\OnErrorBehavior;
-use App\Engine\Exceptions\NodeFailedException;
-use App\Engine\Execution\AsyncExecutor;
-use App\Engine\Execution\ExecutionFinalizer;
-use App\Engine\Execution\ExecutionScheduler;
-use App\Engine\Execution\NodePayload;
-use App\Engine\Execution\Suspension;
-use App\Engine\Execution\SyncExecutor;
-use App\Engine\Graph\GraphCompiler;
+use App\Contracts\Suspendable;
+use App\Engine\Execution\ExecutionWriter;
+use App\Engine\Execution\NodeRunner;
 use App\Engine\Graph\WorkflowGraph;
-use App\Engine\Persistence\BatchWriter;
-use App\Engine\Persistence\CheckpointStore;
 use App\Engine\Sse\SsePublisher;
 use App\Enums\ExecutionMode;
 use App\Enums\ExecutionNodeStatus;
+use App\Enums\OnErrorBehavior;
 use App\Events\ExecutionNodeFailed;
+use App\Exceptions\NodeFailedException;
 use App\Jobs\ResumeWorkflowJob;
 use App\Models\Execution;
+use App\Models\ExecutionCheckpoint;
 use App\Models\PinnedNodeData;
+use App\Services\CreditMeterService;
+use App\Services\ExecutionService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 
 /**
- * The core workflow execution engine.
+ * Core workflow execution engine.
  *
- * Runs a compiled WorkflowGraph using a frontier-based scheduler:
- *  - Sync nodes execute instantly (transforms, conditions, triggers)
- *  - Async nodes execute concurrently via Laravel Concurrency
+ * Merges WorkflowEngine + ExecutionFinalizer. Checkpoint persistence is handled
+ * by private methods (was CheckpointStore).
+ *
+ * Frontier-based scheduler:
+ *  - Sync nodes execute inline
+ *  - Async nodes run concurrently via Laravel Concurrency
  *  - Blocking nodes checkpoint state and requeue via delayed jobs
- *
- * Persistence is batched — node results accumulate in memory and flush
- * to the database periodically or on completion/failure.
- *
- * Extracted responsibilities:
- *  - SsePublisher     → publishes real-time Redis SSE events
- *  - ExecutionScheduler → partitions nodes by execution mode
- *  - ExecutionFinalizer → handles success/failure terminal states
  */
-class WorkflowEngine
+class WorkflowRunner
 {
     /** @var array<string, PinnedNodeData> nodeId → PinnedNodeData (loaded once per run) */
     private array $pinnedData = [];
 
     public function __construct(
-        private readonly GraphCompiler $compiler,
-        private readonly SyncExecutor $syncExecutor,
-        private readonly AsyncExecutor $asyncExecutor,
-        private readonly BatchWriter $batchWriter,
-        private readonly CheckpointStore $checkpointStore,
+        private readonly NodeRunner $nodeRunner,
+        private readonly ExecutionWriter $writer,
         private readonly SsePublisher $ssePublisher,
-        private readonly ExecutionScheduler $executionScheduler,
-        private readonly ExecutionFinalizer $executionFinalizer,
+        private readonly CreditMeterService $creditMeter,
     ) {}
 
     /**
@@ -89,7 +76,7 @@ class WorkflowEngine
             downstreamConsumers: $graph->downstreamConsumers,
         );
 
-        $context = new RunContext(
+        $context = new WorkflowContext(
             graph: $graph,
             outputs: $outputBuffer,
             executionId: $execution->id,
@@ -97,7 +84,6 @@ class WorkflowEngine
             credentials: $credentials,
         );
 
-        // Load pinned node data so test/manual runs can bypass live handlers
         $this->pinnedData = $this->loadPinnedData($execution);
 
         $execution->start();
@@ -111,7 +97,7 @@ class WorkflowEngine
      */
     public function resume(Execution $execution): void
     {
-        $checkpoint = $this->checkpointStore->load($execution->id);
+        $checkpoint = $this->loadCheckpoint($execution->id);
 
         if (! $checkpoint) {
             $execution->fail(['message' => 'No checkpoint found for resumption.']);
@@ -131,7 +117,7 @@ class WorkflowEngine
         $graph = $this->compileGraph($version);
         $credentials = $this->loadCredentials($execution);
 
-        $context = RunContext::fromCheckpoint(
+        $context = WorkflowContext::fromCheckpoint(
             graph: $graph,
             executionId: $execution->id,
             frontierState: array_merge(
@@ -145,8 +131,6 @@ class WorkflowEngine
             credentials: $credentials,
         );
 
-        // Inject webhook resume payload as the suspended WaitNode's output so
-        // downstream nodes can read the incoming webhook body, headers, etc.
         if ($checkpoint->resume_payload !== null) {
             $suspendedNodeId = $execution->result_data['suspended_node'] ?? null;
             if ($suspendedNodeId) {
@@ -164,14 +148,11 @@ class WorkflowEngine
 
         $this->ssePublisher->event($execution->id, 'execution.resumed');
 
-        $this->checkpointStore->delete($execution->id);
+        $this->deleteCheckpoint($execution->id);
 
         $this->executeLoop($execution, $graph, $context);
     }
 
-    /**
-     * Compile workflow version into a WorkflowGraph with caching.
-     */
     private function compileGraph(\App\Models\WorkflowVersion $version): WorkflowGraph
     {
         $cacheKey = "engine:graph:{$version->id}";
@@ -181,7 +162,7 @@ class WorkflowEngine
             return $cached;
         }
 
-        $graph = $this->compiler->compile(
+        $graph = WorkflowGraph::compile(
             nodes: $version->nodes ?? [],
             edges: $version->edges ?? [],
         );
@@ -191,50 +172,41 @@ class WorkflowEngine
         return $graph;
     }
 
-    /**
-     * The main execution loop — frontier-based scheduler.
-     */
-    private function executeLoop(Execution $execution, WorkflowGraph $graph, RunContext $context): void
+    private function executeLoop(Execution $execution, WorkflowGraph $graph, WorkflowContext $context): void
     {
         try {
             while ($context->hasReadyNodes()) {
                 $readyNodes = $context->getReadyNodes();
 
-                // Partition nodes by execution mode
-                [$syncNodes, $asyncNodes, $blockingNodes] = $this->executionScheduler->partition($readyNodes, $graph);
+                [$syncNodes, $asyncNodes, $blockingNodes] = $this->nodeRunner->partition($readyNodes, $graph);
 
-                // Execute sync nodes instantly
                 foreach ($syncNodes as $nodeId) {
                     $this->executeNode($nodeId, $graph, $context, $execution);
                 }
 
-                // Execute async nodes concurrently via Laravel Concurrency
                 if (! empty($asyncNodes)) {
-                    $asyncResults = $this->asyncExecutor->runBatch($asyncNodes, $graph, $context);
+                    $asyncResults = $this->nodeRunner->runAsyncBatch($asyncNodes, $graph, $context);
 
                     foreach ($asyncResults as $nodeId => $result) {
                         $this->commitNodeResult($nodeId, $result, $graph, $context, $execution);
                     }
                 }
 
-                // Blocking nodes — checkpoint + requeue via delayed job
                 if (! empty($blockingNodes)) {
-                    $suspension = $this->handleSuspension($blockingNodes[0], $graph, $context, $execution);
+                    $suspended = $this->handleSuspension($blockingNodes[0], $graph, $context, $execution);
 
-                    if ($suspension !== null) {
+                    if ($suspended !== null) {
                         return;
                     }
 
-                    // Fallback: handler doesn't implement SuspendsExecution, run inline
+                    // Handler doesn't implement Suspendable — run inline
                     foreach ($blockingNodes as $nodeId) {
                         $this->executeNode($nodeId, $graph, $context, $execution);
                     }
                 }
 
-                // Flush to DB if threshold reached
-                $this->batchWriter->flushIfNeeded($context);
+                $this->writer->flushIfNeeded($context);
 
-                // Guard against runaway memory from large loop datasets
                 $memoryCapBytes = (int) config('workflow.output_memory_cap_bytes', 512 * 1024 * 1024);
                 if ($context->outputs->memoryUsage() > $memoryCapBytes) {
                     throw new \RuntimeException(
@@ -243,9 +215,8 @@ class WorkflowEngine
                     );
                 }
 
-                // Check for cancellation
                 if ($this->isCancelled($execution->id)) {
-                    $this->batchWriter->flush();
+                    $this->writer->flush();
                     $execution->cancel();
                     $this->ssePublisher->event($execution->id, 'execution.cancelled');
 
@@ -253,24 +224,22 @@ class WorkflowEngine
                 }
             }
 
-            // Final flush — write any remaining node results
-            $this->batchWriter->flush();
+            $this->writer->flush();
 
-            // Determine final status
             $hasFailures = $this->hasFailedNodes($context);
 
             if ($hasFailures && ! $context->isFinished()) {
-                $this->executionFinalizer->fail($execution, $context);
+                $this->finalizeFail($execution, $context);
             } else {
-                $this->executionFinalizer->succeed($execution, $context);
+                $this->finalizeSuccess($execution, $context);
             }
         } catch (NodeFailedException $e) {
-            $this->batchWriter->flush();
-            $this->executionFinalizer->fail($execution, $context, $e);
+            $this->writer->flush();
+            $this->finalizeFail($execution, $context, $e);
         } catch (\Throwable $e) {
-            $this->batchWriter->flush();
+            $this->writer->flush();
 
-            Log::error('Workflow engine error', [
+            Log::error('Workflow runner error', [
                 'execution_id' => $execution->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -287,22 +256,10 @@ class WorkflowEngine
         }
     }
 
-    /**
-     * Execute a single node: resolve handler, run, record result, advance frontier.
-     *
-     * Error handling order (critical — must happen before context->complete()):
-     *   1. Run the node handler → get the raw result.
-     *   2. If the result is Failed, persist the true status to the batch writer.
-     *   3. Resolve on_error behaviour and convert the raw result to a routing
-     *      result that carries the correct activeBranches for frontier advancement.
-     *      For `stop` this step throws NodeFailedException, aborting the execution.
-     *   4. Pass the routing result to context->complete() so the frontier advances
-     *      along the correct edges (success handles, error handle, or none at all).
-     */
     private function executeNode(
         string $nodeId,
         WorkflowGraph $graph,
-        RunContext $context,
+        WorkflowContext $context,
         Execution $execution,
     ): void {
         $this->ssePublisher->nodeStarted($execution->id, [
@@ -310,14 +267,10 @@ class WorkflowEngine
             'node_type' => $graph->getNode($nodeId)['type'] ?? 'unknown',
         ]);
 
-        // Pinned data bypass: in manual runs, substitute live handler output with
-        // the pinned dataset so the user can test downstream nodes without
-        // re-fetching from external APIs.
         $pinned = $this->pinnedData[$nodeId] ?? null;
         if ($pinned && $pinned->is_active && $execution->mode === ExecutionMode::Manual) {
             $originalResult = NodeResult::completed($pinned->data ?? []);
         } else {
-            // Per-node retry: read retry config from node definition
             $nodeDef = $graph->getNode($nodeId);
             $retryConfig = $nodeDef['config']['retry'] ?? $nodeDef['data']['retry'] ?? [];
             $maxAttempts = max(1, (int) ($retryConfig['max_attempts'] ?? 1));
@@ -326,7 +279,7 @@ class WorkflowEngine
             $originalResult = null;
             for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
                 try {
-                    $result = $this->syncExecutor->run($nodeId, $graph, $context);
+                    $result = $this->nodeRunner->runSync($nodeId, $graph, $context);
                 } catch (NodeFailedException $e) {
                     $result = NodeResult::failed($e->getMessage(), 'NODE_EXECUTION_ERROR');
                 }
@@ -344,8 +297,7 @@ class WorkflowEngine
 
         $sequence = $context->nextSequence();
 
-        // Always persist the true result status (Failed, Completed, etc.) to DB.
-        $this->batchWriter->record(
+        $this->writer->record(
             executionId: $execution->id,
             nodeId: $nodeId,
             nodeRunKey: $nodeId,
@@ -354,14 +306,10 @@ class WorkflowEngine
             sequence: $sequence,
         );
 
-        // Derive the routing result: may be identical to originalResult, or a
-        // modified version with different activeBranches / status. For `stop`
-        // this throws NodeFailedException before we reach context->complete().
         $routingResult = $originalResult->status === ExecutionNodeStatus::Failed
             ? $this->applyOnErrorBehavior($nodeId, $originalResult, $graph, $context, $execution)
             : $originalResult;
 
-        // Advance frontier using the routing result's activeBranches.
         $context->complete(
             nodeId: $nodeId,
             result: $routingResult,
@@ -381,16 +329,11 @@ class WorkflowEngine
         ]);
     }
 
-    /**
-     * Commit a pre-computed result (from AsyncExecutor) into the execution state.
-     *
-     * Applies the same on_error routing logic as executeNode().
-     */
     private function commitNodeResult(
         string $nodeId,
         NodeResult $result,
         WorkflowGraph $graph,
-        RunContext $context,
+        WorkflowContext $context,
         Execution $execution,
     ): void {
         $this->ssePublisher->nodeStarted($execution->id, [
@@ -400,7 +343,7 @@ class WorkflowEngine
 
         $sequence = $context->nextSequence();
 
-        $this->batchWriter->record(
+        $this->writer->record(
             executionId: $execution->id,
             nodeId: $nodeId,
             nodeRunKey: $nodeId,
@@ -432,36 +375,27 @@ class WorkflowEngine
         ]);
     }
 
-    /**
-     * Handle a suspendable node: checkpoint state and dispatch a delayed resume job.
-     *
-     * Returns the Suspension if the execution was suspended, or null if the handler
-     * doesn't implement SuspendsExecution (caller should fall back to inline execution).
-     */
     private function handleSuspension(
         string $nodeId,
         WorkflowGraph $graph,
-        RunContext $context,
+        WorkflowContext $context,
         Execution $execution,
-    ): ?Suspension {
+    ): ?ExecutionPause {
         $node = $graph->getNode($nodeId);
         $type = $node['type'] ?? '';
-        $handler = NodeRegistry::handler($type);
+        $handler = NodeCatalog::handler($type);
 
-        if (! $handler instanceof SuspendsExecution) {
+        if (! $handler instanceof Suspendable) {
             return null;
         }
 
-        // Build payload and get suspension details (do NOT execute the node)
-        $nodePayloadFactory = app(\App\Engine\Execution\NodePayloadFactory::class);
-        $nodePayload = $nodePayloadFactory->build($nodeId, $graph, $context);
-        $suspension = $handler->suspend($nodePayload);
+        $nodeInput = NodeInput::build($nodeId, $graph, $context);
+        $pause = $handler->suspend($nodeInput);
 
-        // Record the node as completed with the suspension output
-        $result = NodeResult::completed($suspension->nodeOutput);
+        $result = NodeResult::completed($pause->nodeOutput);
         $sequence = $context->nextSequence();
 
-        $this->batchWriter->record(
+        $this->writer->record(
             executionId: $execution->id,
             nodeId: $nodeId,
             nodeRunKey: $nodeId,
@@ -470,65 +404,41 @@ class WorkflowEngine
             sequence: $sequence,
         );
 
-        // Advance frontier past the suspending node
         $context->complete(
             nodeId: $nodeId,
             result: $result,
             activeBranches: $result->activeBranches,
         );
 
-        // Flush all pending rows before suspending
-        $this->batchWriter->flush();
+        $this->writer->flush();
 
-        // Save checkpoint
-        $this->checkpointStore->save($execution, $context, $suspension);
+        $this->saveCheckpoint($execution, $context, $pause);
 
-        // Transition execution to waiting
-        $execution->markWaiting($suspension->resumeAt, [
-            'suspend_reason' => $suspension->reason,
+        $execution->markWaiting($pause->resumeAt, [
+            'suspend_reason' => $pause->reason,
             'suspended_node' => $nodeId,
         ]);
 
         $this->ssePublisher->event($execution->id, 'execution.suspended', [
             'node_id' => $nodeId,
-            'reason' => $suspension->reason,
-            'resume_at' => $suspension->resumeAt->toIso8601String(),
+            'reason' => $pause->reason,
+            'resume_at' => $pause->resumeAt->toIso8601String(),
         ]);
 
-        // Dispatch delayed resume job
-        $delaySeconds = max(0, (int) now()->diffInSeconds($suspension->resumeAt, false));
+        $delaySeconds = max(0, (int) now()->diffInSeconds($pause->resumeAt, false));
+        ResumeWorkflowJob::dispatch($execution)->delay(now()->addSeconds($delaySeconds));
 
-        ResumeWorkflowJob::dispatch($execution)
-            ->delay(now()->addSeconds($delaySeconds));
-
-        return $suspension;
+        return $pause;
     }
 
     /**
-     * Apply the per-node on_error strategy to a failed NodeResult.
-     *
-     * Returns a routing NodeResult whose activeBranches drive frontier advancement:
-     *
-     *  stop                 – Fires ExecutionNodeFailed, then throws NodeFailedException.
-     *                         The execution loop catches this and halts the workflow.
-     *                         Never returns.
-     *
-     *  continue             – Returns NodeResult::completed([]) so context->complete()
-     *                         advances all downstream success-path nodes with empty input.
-     *                         The original failure is already persisted to DB by the caller.
-     *
-     *  continue_error_output – Returns NodeResult::errorOutput(errorData) which carries
-     *                          activeBranches=['error']. context->complete() will only
-     *                          advance edges whose sourceHandle === 'error', letting the
-     *                          user's error sub-flow handle the failure.
-     *
      * @throws NodeFailedException  when behavior is `stop`
      */
     private function applyOnErrorBehavior(
         string $nodeId,
         NodeResult $result,
         WorkflowGraph $graph,
-        RunContext $context,
+        WorkflowContext $context,
         Execution $execution,
     ): NodeResult {
         $node = $graph->getNode($nodeId) ?? [];
@@ -537,15 +447,11 @@ class WorkflowEngine
         $errorMessage = $result->error['message'] ?? 'Node execution failed.';
 
         return match ($behavior) {
-
-            // ── stop ─────────────────────────────────────────────────────────
             OnErrorBehavior::Stop => (function () use (
                 $nodeId, $nodeType, $errorMessage, $result, $node, $graph, $context, $execution,
             ): never {
-                // Collect payload for the event (best-effort — may fail for broken nodes)
                 try {
-                    $nodePayloadFactory = app(\App\Engine\Execution\NodePayloadFactory::class);
-                    $payload = $nodePayloadFactory->build($nodeId, $graph, $context);
+                    $payload = NodeInput::build($nodeId, $graph, $context);
                     $config = $payload->config;
                     $inputData = $payload->inputData;
                 } catch (\Throwable) {
@@ -554,12 +460,7 @@ class WorkflowEngine
                 }
 
                 ExecutionNodeFailed::dispatch(
-                    $execution,
-                    $nodeId,
-                    $nodeType,
-                    $errorMessage,
-                    $config,
-                    $inputData,
+                    $execution, $nodeId, $nodeType, $errorMessage, $config, $inputData,
                 );
 
                 throw new NodeFailedException(
@@ -570,31 +471,16 @@ class WorkflowEngine
                 );
             })(),
 
-            // ── continue ─────────────────────────────────────────────────────
-            // Treat the node as if it produced empty output; all success-path
-            // downstream nodes still run (with empty input from this node).
-            OnErrorBehavior::Continue => (function () use (
-                $nodeId, $result, $execution,
-            ): NodeResult {
+            OnErrorBehavior::Continue => (function () use ($nodeId, $result, $execution): NodeResult {
                 Log::warning("Node [{$nodeId}] failed — continuing (on_error=continue).", [
                     'execution_id' => $execution->id,
                     'error' => $result->error,
                 ]);
 
-                // activeBranches = null → resolveSuccessors returns all successors.
-                // Empty output so downstream nodes receive nothing from this node.
-                return NodeResult::completed(
-                    output: [],
-                    durationMs: $result->durationMs ?? 0,
-                );
+                return NodeResult::completed(output: [], durationMs: $result->durationMs ?? 0);
             })(),
 
-            // ── continue_error_output ─────────────────────────────────────────
-            // Route error data only to edges whose sourceHandle === 'error'.
-            // Success-path edges are NOT activated.
-            OnErrorBehavior::ContinueErrorOutput => (function () use (
-                $nodeId, $result, $execution,
-            ): NodeResult {
+            OnErrorBehavior::ContinueErrorOutput => (function () use ($nodeId, $result, $execution): NodeResult {
                 Log::warning("Node [{$nodeId}] failed — routing to error output.", [
                     'execution_id' => $execution->id,
                     'error' => $result->error,
@@ -608,9 +494,151 @@ class WorkflowEngine
         };
     }
 
-    /**
-     * Check if the execution has been cancelled via a Redis flag.
-     */
+    // ── Terminal state handlers (was ExecutionFinalizer) ─────────────────────
+
+    private function finalizeSuccess(Execution $execution, WorkflowContext $context): void
+    {
+        $durationMs = $context->elapsedMs();
+
+        $execution->complete(
+            resultData: ['completed_nodes' => $context->completedCount()],
+            durationMs: $durationMs,
+        );
+
+        try {
+            $nodes = $execution->nodes()->get()->all();
+            $this->creditMeter->consume($execution, $nodes);
+        } catch (\Throwable $e) {
+            Log::error('Failed to consume credits for execution.', [
+                'execution_id' => $execution->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        $execution->workflow->increment('execution_count', 1, ['last_executed_at' => now()]);
+
+        $this->ssePublisher->event($execution->id, 'execution.completed', [
+            'duration_ms' => $durationMs,
+            'node_count' => $context->completedCount(),
+        ]);
+    }
+
+    private function finalizeFail(Execution $execution, WorkflowContext $context, ?\Throwable $exception = null): void
+    {
+        $durationMs = $context->elapsedMs();
+
+        $error = $exception
+            ? ['message' => $exception->getMessage(), 'type' => get_class($exception)]
+            : ['message' => 'One or more nodes failed.'];
+
+        $execution->fail($error, $durationMs);
+
+        $this->scheduleAutoRetry($execution);
+        $this->triggerErrorWorkflow($execution, $error);
+
+        $this->ssePublisher->event($execution->id, 'execution.failed', [
+            'error' => $error['message'],
+            'duration_ms' => $durationMs,
+        ]);
+    }
+
+    /** @param  array<string, mixed>  $error */
+    private function triggerErrorWorkflow(Execution $execution, array $error): void
+    {
+        $workflow = $execution->workflow;
+        $errorWorkflowId = $workflow->error_workflow_id;
+
+        if (! $errorWorkflowId) {
+            $workflow->loadMissing('workspace.setting');
+            $errorWorkflowId = $workflow->workspace?->setting?->error_workflow_id;
+        }
+
+        if (! $errorWorkflowId || $errorWorkflowId === $workflow->id) {
+            return;
+        }
+
+        $currentDepth = (int) ($execution->trigger_data['__error_depth'] ?? 0);
+        if ($currentDepth >= 3) {
+            return;
+        }
+
+        try {
+            $errorWorkflow = \App\Models\Workflow::find($errorWorkflowId);
+
+            if ($errorWorkflow && $errorWorkflow->is_active) {
+                app(ExecutionService::class)->trigger(
+                    workflow: $errorWorkflow,
+                    user: $execution->triggeredBy ?? $workflow->creator,
+                    triggerData: [
+                        'source_execution_id' => $execution->id,
+                        'source_workflow_id' => $workflow->id,
+                        'source_workflow_name' => $workflow->name,
+                        'error' => $error,
+                        '__error_depth' => $currentDepth + 1,
+                    ],
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::error('Failed to trigger error workflow.', [
+                'execution_id' => $execution->id,
+                'error_workflow_id' => $errorWorkflowId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function scheduleAutoRetry(Execution $execution): void
+    {
+        try {
+            app(ExecutionService::class)->autoRetry($execution);
+        } catch (\Throwable $e) {
+            Log::error('Failed to schedule auto-retry.', [
+                'execution_id' => $execution->id,
+                'attempt' => $execution->attempt,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    // ── Checkpoint persistence (was CheckpointStore) ─────────────────────────
+
+    private function saveCheckpoint(Execution $execution, WorkflowContext $context, ExecutionPause $pause): void
+    {
+        $frontierSnapshot = $context->snapshot();
+        $outputSnapshot = $context->outputs->snapshot();
+
+        ExecutionCheckpoint::updateOrCreate(
+            ['execution_id' => $execution->id],
+            [
+                'frontier_state' => [
+                    'ready_queue' => $frontierSnapshot['ready_queue'],
+                    'remaining_in_degree' => $frontierSnapshot['remaining_in_degree'],
+                    'completed_nodes' => $frontierSnapshot['completed_nodes'],
+                    'variables' => $frontierSnapshot['variables'],
+                ],
+                'output_refs' => $outputSnapshot,
+                'frame_stack' => $frontierSnapshot['frame_stack'],
+                'next_sequence' => $frontierSnapshot['next_sequence'],
+                'suspend_reason' => $pause->reason,
+                'resume_at' => $pause->resumeAt,
+                'webhook_wait_uuid' => $pause->webhookWaitUuid,
+                'checkpoint_version' => 1,
+            ],
+        );
+    }
+
+    private function loadCheckpoint(int $executionId): ?ExecutionCheckpoint
+    {
+        return ExecutionCheckpoint::where('execution_id', $executionId)->first();
+    }
+
+    private function deleteCheckpoint(int $executionId): void
+    {
+        ExecutionCheckpoint::where('execution_id', $executionId)->delete();
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
     private function isCancelled(int $executionId): bool
     {
         try {
@@ -620,10 +648,7 @@ class WorkflowEngine
         }
     }
 
-    /**
-     * Check if any completed nodes have failed status.
-     */
-    private function hasFailedNodes(RunContext $context): bool
+    private function hasFailedNodes(WorkflowContext $context): bool
     {
         foreach ($context->getCompletedNodes() as $result) {
             if ($result->status === ExecutionNodeStatus::Failed) {
@@ -634,11 +659,7 @@ class WorkflowEngine
         return false;
     }
 
-    /**
-     * Load pinned node data for the workflow, keyed by node ID.
-     *
-     * @return array<string, PinnedNodeData>
-     */
+    /** @return array<string, PinnedNodeData> */
     private function loadPinnedData(Execution $execution): array
     {
         return PinnedNodeData::where('workflow_id', $execution->workflow_id)
@@ -648,11 +669,7 @@ class WorkflowEngine
             ->all();
     }
 
-    /**
-     * Load workspace variables for the execution.
-     *
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     private function loadVariables(Execution $execution): array
     {
         $workspace = $execution->workspace;
@@ -667,11 +684,7 @@ class WorkflowEngine
         return $variables;
     }
 
-    /**
-     * Load credentials for the execution and perform auto-refresh if necessary.
-     *
-     * @return array<string, \App\Models\Credential>
-     */
+    /** @return array<string, \App\Models\Credential> */
     private function loadCredentials(Execution $execution): array
     {
         $execution->load('workflow.credentials');

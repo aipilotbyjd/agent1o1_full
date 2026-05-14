@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Engine\WebhookRegistrars\WebhookRegistrarRegistry;
+use App\Engine\Webhook\WebhookRegistry;
 use App\Models\Webhook;
 use App\Models\Workflow;
 use Illuminate\Support\Facades\Log;
@@ -56,12 +56,12 @@ class WebhookAutoRegistrationService
         foreach ($triggerNodes as $node) {
             $provider = $node['provider'] ?? null;
 
-            if (! $provider || ! WebhookRegistrarRegistry::supports($provider)) {
+            if (! $provider || ! WebhookRegistry::supports($provider)) {
                 continue;
             }
 
             // Skip providers that require manual setup (e.g. Discord)
-            if (! WebhookRegistrarRegistry::supportsAutoRegistration($provider)) {
+            if (! WebhookRegistry::supportsAutoRegistration($provider)) {
                 Log::info('WebhookAutoRegistrationService: provider requires manual setup, skipping auto-registration', [
                     'workflow_id' => $workflow->id,
                     'provider' => $provider,
@@ -98,7 +98,7 @@ class WebhookAutoRegistrationService
      */
     private function registerExternalWebhook(Workflow $workflow, array $node, string $provider): void
     {
-        $registrar = WebhookRegistrarRegistry::resolveRegisterable($provider);
+        $registrar = WebhookRegistry::resolveRegisterable($provider);
 
         if (! $registrar) {
             return;
@@ -226,7 +226,7 @@ class WebhookAutoRegistrationService
      */
     private function unregisterExternalWebhook(Webhook $webhook): void
     {
-        $registrar = WebhookRegistrarRegistry::resolveRegisterable($webhook->provider);
+        $registrar = WebhookRegistry::resolveRegisterable($webhook->provider);
 
         if (! $registrar) {
             return;
@@ -295,7 +295,7 @@ class WebhookAutoRegistrationService
                 continue;
             }
 
-            if (WebhookRegistrarRegistry::supports($triggerType)) {
+            if (WebhookRegistry::supports($triggerType)) {
                 $triggers[] = [
                     'id' => $node['id'] ?? null,
                     'provider' => $triggerType,

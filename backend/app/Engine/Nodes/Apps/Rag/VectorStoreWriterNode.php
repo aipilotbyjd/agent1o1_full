@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Rag;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use App\Models\Workspace;
 use App\Services\VectorStoreService;
 
@@ -33,7 +33,7 @@ class VectorStoreWriterNode extends AppNode
     /**
      * Store chunks as embeddings
      */
-    private function store(NodePayload $payload): array
+    private function store(NodeInput $payload): array
     {
         $chunks = $payload->inputData['chunks'] ?? [];
         $collectionName = $payload->config['collection_name'] ?? 'default';
@@ -100,7 +100,7 @@ class VectorStoreWriterNode extends AppNode
     /**
      * Delete a document from the vector store
      */
-    private function deleteDocument(NodePayload $payload): array
+    private function deleteDocument(NodeInput $payload): array
     {
         $documentId = $payload->config['document_id'] ?? '';
         $collectionName = $payload->config['collection_name'] ?? 'default';
@@ -133,7 +133,7 @@ class VectorStoreWriterNode extends AppNode
     /**
      * Delete an entire collection
      */
-    private function deleteCollection(NodePayload $payload): array
+    private function deleteCollection(NodeInput $payload): array
     {
         $collectionName = $payload->config['collection_name'] ?? '';
 

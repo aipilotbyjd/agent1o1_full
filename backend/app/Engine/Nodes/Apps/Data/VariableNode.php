@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Data;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use App\Models\Variable;
 use App\Models\Workspace;
 
@@ -35,7 +35,7 @@ class VariableNode extends AppNode
     /**
      * Set variable value
      */
-    private function set(NodePayload $payload): array
+    private function set(NodeInput $payload): array
     {
         $key = $payload->config['key'] ?? '';
         $value = $payload->config['value'] ?? $payload->inputData['value'] ?? null;
@@ -64,7 +64,7 @@ class VariableNode extends AppNode
     /**
      * Get variable value
      */
-    private function get(NodePayload $payload): array
+    private function get(NodeInput $payload): array
     {
         $key = $payload->config['key'] ?? '';
         $scope = $payload->config['scope'] ?? 'workflow';
@@ -95,7 +95,7 @@ class VariableNode extends AppNode
     /**
      * Increment numeric variable
      */
-    private function increment(NodePayload $payload): array
+    private function increment(NodeInput $payload): array
     {
         $key = $payload->config['key'] ?? '';
         $amount = (int) ($payload->config['amount'] ?? 1);
@@ -125,7 +125,7 @@ class VariableNode extends AppNode
     /**
      * Decrement numeric variable
      */
-    private function decrement(NodePayload $payload): array
+    private function decrement(NodeInput $payload): array
     {
         $key = $payload->config['key'] ?? '';
         $amount = (int) ($payload->config['amount'] ?? 1);
@@ -155,7 +155,7 @@ class VariableNode extends AppNode
     /**
      * Append to array variable
      */
-    private function append(NodePayload $payload): array
+    private function append(NodeInput $payload): array
     {
         $key = $payload->config['key'] ?? '';
         $value = $payload->config['value'] ?? $payload->inputData['value'] ?? null;
@@ -189,7 +189,7 @@ class VariableNode extends AppNode
     /**
      * Delete variable
      */
-    private function delete(NodePayload $payload): array
+    private function delete(NodeInput $payload): array
     {
         $key = $payload->config['key'] ?? '';
         $scope = $payload->config['scope'] ?? 'workflow';

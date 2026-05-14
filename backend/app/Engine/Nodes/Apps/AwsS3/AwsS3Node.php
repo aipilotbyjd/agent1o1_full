@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\AwsS3;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -38,7 +38,7 @@ class AwsS3Node extends AppNode
         ];
     }
 
-    private function endpoint(NodePayload $payload, ?string $bucket = null): string
+    private function endpoint(NodeInput $payload, ?string $bucket = null): string
     {
         $custom = rtrim((string) ($payload->credentials['endpoint'] ?? ''), '/');
         if ($custom) {
@@ -53,7 +53,7 @@ class AwsS3Node extends AppNode
             : "https://s3.{$region}.amazonaws.com";
     }
 
-    private function sign(NodePayload $payload, string $method, string $url, string $body = '', array $extraHeaders = []): array
+    private function sign(NodeInput $payload, string $method, string $url, string $body = '', array $extraHeaders = []): array
     {
         $accessKey = (string) ($payload->credentials['access_key_id'] ?? '');
         $secretKey = (string) ($payload->credentials['secret_access_key'] ?? '');
@@ -117,7 +117,7 @@ class AwsS3Node extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listObjects(NodePayload $payload): array
+    private function listObjects(NodeInput $payload): array
     {
         $bucket = (string) ($payload->inputData['bucket'] ?? $payload->config['bucket'] ?? $payload->credentials['bucket'] ?? '');
         $prefix = (string) ($payload->config['prefix'] ?? '');
@@ -147,7 +147,7 @@ class AwsS3Node extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getObject(NodePayload $payload): array
+    private function getObject(NodeInput $payload): array
     {
         $bucket = (string) ($payload->inputData['bucket'] ?? $payload->config['bucket'] ?? $payload->credentials['bucket'] ?? '');
         $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
@@ -170,7 +170,7 @@ class AwsS3Node extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function putObject(NodePayload $payload): array
+    private function putObject(NodeInput $payload): array
     {
         $bucket = (string) ($payload->inputData['bucket'] ?? $payload->config['bucket'] ?? $payload->credentials['bucket'] ?? '');
         $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
@@ -191,7 +191,7 @@ class AwsS3Node extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function deleteObject(NodePayload $payload): array
+    private function deleteObject(NodeInput $payload): array
     {
         $bucket = (string) ($payload->inputData['bucket'] ?? $payload->config['bucket'] ?? $payload->credentials['bucket'] ?? '');
         $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
@@ -207,7 +207,7 @@ class AwsS3Node extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function copyObject(NodePayload $payload): array
+    private function copyObject(NodeInput $payload): array
     {
         $bucket = (string) ($payload->inputData['bucket'] ?? $payload->config['bucket'] ?? $payload->credentials['bucket'] ?? '');
         $sourceKey = (string) ($payload->inputData['source_key'] ?? $payload->config['source_key'] ?? '');
@@ -230,7 +230,7 @@ class AwsS3Node extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getPresignedUrl(NodePayload $payload): array
+    private function getPresignedUrl(NodeInput $payload): array
     {
         $bucket = (string) ($payload->inputData['bucket'] ?? $payload->config['bucket'] ?? $payload->credentials['bucket'] ?? '');
         $key = (string) ($payload->inputData['key'] ?? $payload->config['key'] ?? '');
@@ -281,7 +281,7 @@ class AwsS3Node extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listBuckets(NodePayload $payload): array
+    private function listBuckets(NodeInput $payload): array
     {
         $url = 'https://s3.amazonaws.com/';
         $headers = $this->sign($payload, 'GET', $url);

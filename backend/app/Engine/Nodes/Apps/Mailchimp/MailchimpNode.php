@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Mailchimp;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Http;
 
 class MailchimpNode extends AppNode
@@ -26,7 +26,7 @@ class MailchimpNode extends AppNode
         ];
     }
 
-    private function client(NodePayload $payload): \Illuminate\Http\Client\PendingRequest
+    private function client(NodeInput $payload): \Illuminate\Http\Client\PendingRequest
     {
         $apiKey = (string) ($payload->credentials['api_key'] ?? $payload->credentials['access_token'] ?? '');
         $datacenter = explode('-', $apiKey)[1] ?? 'us1';
@@ -38,7 +38,7 @@ class MailchimpNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function addMember(NodePayload $payload): array
+    private function addMember(NodeInput $payload): array
     {
         $listId = (string) ($payload->inputData['list_id'] ?? $payload->config['list_id'] ?? '');
         $email = (string) ($payload->inputData['email'] ?? $payload->config['email'] ?? '');
@@ -60,7 +60,7 @@ class MailchimpNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function updateMember(NodePayload $payload): array
+    private function updateMember(NodeInput $payload): array
     {
         $listId = (string) ($payload->inputData['list_id'] ?? $payload->config['list_id'] ?? '');
         $email = strtolower(trim((string) ($payload->inputData['email'] ?? $payload->config['email'] ?? '')));
@@ -79,7 +79,7 @@ class MailchimpNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getMember(NodePayload $payload): array
+    private function getMember(NodeInput $payload): array
     {
         $listId = (string) ($payload->inputData['list_id'] ?? $payload->config['list_id'] ?? '');
         $email = strtolower(trim((string) ($payload->inputData['email'] ?? $payload->config['email'] ?? '')));
@@ -94,7 +94,7 @@ class MailchimpNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function removeMember(NodePayload $payload): array
+    private function removeMember(NodeInput $payload): array
     {
         $listId = (string) ($payload->inputData['list_id'] ?? $payload->config['list_id'] ?? '');
         $email = strtolower(trim((string) ($payload->inputData['email'] ?? $payload->config['email'] ?? '')));
@@ -109,7 +109,7 @@ class MailchimpNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listLists(NodePayload $payload): array
+    private function listLists(NodeInput $payload): array
     {
         $response = $this->client($payload)->get('/lists', ['count' => $payload->config['limit'] ?? 10]);
         $response->throw();
@@ -120,7 +120,7 @@ class MailchimpNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createCampaign(NodePayload $payload): array
+    private function createCampaign(NodeInput $payload): array
     {
         $response = $this->client($payload)->post('/campaigns', [
             'type' => $payload->config['type'] ?? 'regular',
@@ -140,7 +140,7 @@ class MailchimpNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function sendCampaign(NodePayload $payload): array
+    private function sendCampaign(NodeInput $payload): array
     {
         $campaignId = (string) ($payload->inputData['campaign_id'] ?? $payload->config['campaign_id'] ?? '');
 

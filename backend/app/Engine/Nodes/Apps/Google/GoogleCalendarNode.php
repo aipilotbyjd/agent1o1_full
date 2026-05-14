@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Google;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 /**
  * Handles Google Calendar operations: list_events, get_event, create_event, update_event, delete_event, list_calendars.
@@ -32,7 +32,7 @@ class GoogleCalendarNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listEvents(NodePayload $payload): array
+    private function listEvents(NodeInput $payload): array
     {
         $config = $payload->config;
         $calendarId = $config['calendar_id'] ?? 'primary';
@@ -73,7 +73,7 @@ class GoogleCalendarNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getEvent(NodePayload $payload): array
+    private function getEvent(NodeInput $payload): array
     {
         $config = $payload->config;
         $calendarId = $config['calendar_id'] ?? 'primary';
@@ -100,7 +100,7 @@ class GoogleCalendarNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listCalendars(NodePayload $payload): array
+    private function listCalendars(NodeInput $payload): array
     {
         $response = $this->authenticatedRequest($payload->credentials)
             ->get(self::BASE_URL.'/users/me/calendarList');
@@ -122,7 +122,7 @@ class GoogleCalendarNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createEvent(NodePayload $payload): array
+    private function createEvent(NodeInput $payload): array
     {
         $config = $payload->config;
         $calendarId = $config['calendar_id'] ?? 'primary';
@@ -159,7 +159,7 @@ class GoogleCalendarNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function updateEvent(NodePayload $payload): array
+    private function updateEvent(NodeInput $payload): array
     {
         $config = $payload->config;
         $calendarId = $config['calendar_id'] ?? 'primary';
@@ -193,7 +193,7 @@ class GoogleCalendarNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function deleteEvent(NodePayload $payload): array
+    private function deleteEvent(NodeInput $payload): array
     {
         $config = $payload->config;
         $calendarId = $config['calendar_id'] ?? 'primary';

@@ -2,9 +2,9 @@
 
 namespace App\Engine\Nodes\Flow;
 
-use App\Engine\Contracts\NodeHandler;
+use App\Contracts\NodeHandler;
 use App\Engine\NodeResult;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use App\Enums\ExecutionNodeStatus;
 
 /**
@@ -15,7 +15,7 @@ use App\Enums\ExecutionNodeStatus;
  */
 class WaitForEventNode implements NodeHandler
 {
-    public function handle(NodePayload $payload): NodeResult
+    public function handle(NodeInput $payload): NodeResult
     {
         $startTime = hrtime(true);
 

@@ -2,8 +2,8 @@
 
 namespace App\Agents\Tools;
 
-use App\Engine\Execution\NodePayload;
-use App\Engine\NodeRegistry;
+use App\Engine\NodeCatalog;
+use App\Engine\NodeInput;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
@@ -39,7 +39,7 @@ class WorkflowNodeTool implements Tool
      */
     public function handle(Request $request): Stringable|string
     {
-        $handlerClass = NodeRegistry::resolve($this->nodeType);
+        $handlerClass = NodeCatalog::resolve($this->nodeType);
 
         if ($handlerClass === null) {
             return json_encode(['error' => "Unknown node type: {$this->nodeType}"], JSON_THROW_ON_ERROR);
@@ -47,7 +47,7 @@ class WorkflowNodeTool implements Tool
 
         $handler = new $handlerClass;
 
-        $payload = new NodePayload(
+        $payload = new NodeInput(
             nodeId: 'ai-agent-tool-'.uniqid(),
             nodeType: $this->nodeType,
             nodeName: $this->toolName,

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Engine\WebhookRegistrars\WebhookRegistrarRegistry;
+use App\Engine\Webhook\WebhookRegistry;
 use App\Jobs\WebhookProcessingJob;
 use App\Models\Webhook;
 use App\Services\WebhookService;
@@ -199,7 +199,7 @@ class WebhookReceiverController
      */
     private function verifyProviderSignature(Request $request, Webhook $webhook): bool
     {
-        $registrar = WebhookRegistrarRegistry::resolve($webhook->provider);
+        $registrar = WebhookRegistry::resolve($webhook->provider);
 
         if (! $registrar) {
             return true;

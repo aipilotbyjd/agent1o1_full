@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Slack;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 class SlackNode extends AppNode
 {
@@ -26,7 +26,7 @@ class SlackNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function sendMessage(NodePayload $payload): array
+    private function sendMessage(NodeInput $payload): array
     {
         $config = $payload->config;
         $channel = $config['channel'] ?? '';
@@ -46,7 +46,7 @@ class SlackNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listChannels(NodePayload $payload): array
+    private function listChannels(NodeInput $payload): array
     {
         $response = $this->authenticatedRequest($payload->credentials)
             ->get(self::BASE_URL.'/conversations.list', [
@@ -64,7 +64,7 @@ class SlackNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listUsers(NodePayload $payload): array
+    private function listUsers(NodeInput $payload): array
     {
         $response = $this->authenticatedRequest($payload->credentials)
             ->get(self::BASE_URL.'/users.list');

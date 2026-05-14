@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Ftp;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 /**
  * FTP/SFTP node — file transfer operations.
@@ -38,7 +38,7 @@ class FtpNode extends AppNode
         ];
     }
 
-    private function connect(NodePayload $payload): mixed
+    private function connect(NodeInput $payload): mixed
     {
         $host = (string) ($payload->credentials['host'] ?? '');
         $port = (int) ($payload->credentials['port'] ?? 21);
@@ -72,7 +72,7 @@ class FtpNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listFiles(NodePayload $payload): array
+    private function listFiles(NodeInput $payload): array
     {
         $path = (string) ($payload->inputData['path'] ?? $payload->config['path'] ?? '/');
         $conn = $this->connect($payload);
@@ -110,7 +110,7 @@ class FtpNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function upload(NodePayload $payload): array
+    private function upload(NodeInput $payload): array
     {
         $remotePath = (string) ($payload->inputData['remote_path'] ?? $payload->config['remote_path'] ?? '');
         $content = (string) ($payload->inputData['content'] ?? $payload->config['content'] ?? '');
@@ -148,7 +148,7 @@ class FtpNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function download(NodePayload $payload): array
+    private function download(NodeInput $payload): array
     {
         $remotePath = (string) ($payload->inputData['remote_path'] ?? $payload->config['remote_path'] ?? '');
         $tmpFile = tempnam(sys_get_temp_dir(), 'ftp_download_');
@@ -179,7 +179,7 @@ class FtpNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function delete(NodePayload $payload): array
+    private function delete(NodeInput $payload): array
     {
         $remotePath = (string) ($payload->inputData['remote_path'] ?? $payload->config['remote_path'] ?? '');
         $conn = $this->connect($payload);
@@ -196,7 +196,7 @@ class FtpNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function rename(NodePayload $payload): array
+    private function rename(NodeInput $payload): array
     {
         $from = (string) ($payload->inputData['from'] ?? $payload->config['from'] ?? '');
         $to = (string) ($payload->inputData['to'] ?? $payload->config['to'] ?? '');
@@ -215,7 +215,7 @@ class FtpNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createDirectory(NodePayload $payload): array
+    private function createDirectory(NodeInput $payload): array
     {
         $path = (string) ($payload->inputData['path'] ?? $payload->config['path'] ?? '');
         $conn = $this->connect($payload);

@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Util;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Log;
 
 class UtilNode extends AppNode
@@ -30,7 +30,7 @@ class UtilNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function filter(NodePayload $payload): array
+    private function filter(NodeInput $payload): array
     {
         $items = $payload->inputData['items'] ?? [];
         $conditions = $payload->config['conditions'] ?? [];
@@ -76,7 +76,7 @@ class UtilNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function aggregate(NodePayload $payload): array
+    private function aggregate(NodeInput $payload): array
     {
         $items = $payload->inputData['items'] ?? [];
         $operation = $payload->config['aggregate_operation'] ?? 'count';
@@ -105,7 +105,7 @@ class UtilNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function jsonParse(NodePayload $payload): array
+    private function jsonParse(NodeInput $payload): array
     {
         $jsonString = $payload->inputData['json_string'] ?? '';
 
@@ -121,7 +121,7 @@ class UtilNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function template(NodePayload $payload): array
+    private function template(NodeInput $payload): array
     {
         $template = $payload->config['template'] ?? '';
         $variables = $payload->inputData['variables'] ?? [];
@@ -140,7 +140,7 @@ class UtilNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function logger(NodePayload $payload): array
+    private function logger(NodeInput $payload): array
     {
         $level = $payload->config['level'] ?? 'info';
         $message = $payload->inputData['message'] ?? '';
@@ -164,7 +164,7 @@ class UtilNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function errorHandler(NodePayload $payload): array
+    private function errorHandler(NodeInput $payload): array
     {
         return $payload->inputData;
     }

@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Twitter;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -36,7 +36,7 @@ class TwitterNode extends AppNode
         ];
     }
 
-    private function client(NodePayload $payload): \Illuminate\Http\Client\PendingRequest
+    private function client(NodeInput $payload): \Illuminate\Http\Client\PendingRequest
     {
         $token = (string) ($payload->credentials['access_token'] ?? $payload->credentials['bearer_token'] ?? '');
 
@@ -46,7 +46,7 @@ class TwitterNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createTweet(NodePayload $payload): array
+    private function createTweet(NodeInput $payload): array
     {
         $text = (string) ($payload->inputData['text'] ?? $payload->inputData['tweet'] ?? $payload->config['text'] ?? '');
 
@@ -64,7 +64,7 @@ class TwitterNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function deleteTweet(NodePayload $payload): array
+    private function deleteTweet(NodeInput $payload): array
     {
         $tweetId = (string) ($payload->inputData['tweet_id'] ?? $payload->config['tweet_id'] ?? '');
 
@@ -77,7 +77,7 @@ class TwitterNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getTweet(NodePayload $payload): array
+    private function getTweet(NodeInput $payload): array
     {
         $tweetId = (string) ($payload->inputData['tweet_id'] ?? $payload->config['tweet_id'] ?? '');
 
@@ -93,7 +93,7 @@ class TwitterNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function searchTweets(NodePayload $payload): array
+    private function searchTweets(NodeInput $payload): array
     {
         $query = (string) ($payload->inputData['query'] ?? $payload->config['query'] ?? '');
 
@@ -114,7 +114,7 @@ class TwitterNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getUser(NodePayload $payload): array
+    private function getUser(NodeInput $payload): array
     {
         $username = ltrim((string) ($payload->inputData['username'] ?? $payload->config['username'] ?? ''), '@');
         $userId = (string) ($payload->inputData['user_id'] ?? $payload->config['user_id'] ?? '');
@@ -133,7 +133,7 @@ class TwitterNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getUserTweets(NodePayload $payload): array
+    private function getUserTweets(NodeInput $payload): array
     {
         $userId = (string) ($payload->inputData['user_id'] ?? $payload->config['user_id'] ?? '');
 
@@ -150,7 +150,7 @@ class TwitterNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function likeTweet(NodePayload $payload): array
+    private function likeTweet(NodeInput $payload): array
     {
         $userId = (string) ($payload->credentials['user_id'] ?? $payload->config['user_id'] ?? '');
         $tweetId = (string) ($payload->inputData['tweet_id'] ?? $payload->config['tweet_id'] ?? '');
@@ -164,7 +164,7 @@ class TwitterNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function retweet(NodePayload $payload): array
+    private function retweet(NodeInput $payload): array
     {
         $userId = (string) ($payload->credentials['user_id'] ?? $payload->config['user_id'] ?? '');
         $tweetId = (string) ($payload->inputData['tweet_id'] ?? $payload->config['tweet_id'] ?? '');

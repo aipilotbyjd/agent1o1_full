@@ -2,10 +2,10 @@
 
 namespace App\Engine\Nodes\Apps;
 
-use App\Engine\Contracts\NodeHandler;
+use App\Contracts\NodeHandler;
 use App\Engine\NodeResult;
 use App\Engine\Nodes\Concerns\ResolvesCredentials;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 /**
  * Base class for all third-party app node handlers.
@@ -37,7 +37,7 @@ abstract class AppNode implements NodeHandler
         return array_key_first($this->operations()) ?? '';
     }
 
-    public function handle(NodePayload $payload): NodeResult
+    public function handle(NodeInput $payload): NodeResult
     {
         $startTime = hrtime(true);
         $maxRetries = (int) ($payload->config['maxRetries'] ?? 3);

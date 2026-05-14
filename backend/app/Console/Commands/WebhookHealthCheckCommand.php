@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Engine\WebhookRegistrars\WebhookRegistrarRegistry;
+use App\Engine\Webhook\WebhookRegistry;
 use App\Models\Webhook;
 use App\Services\CredentialResolverService;
 use App\Services\WebhookAutoRegistrationService;
@@ -81,7 +81,7 @@ class WebhookHealthCheckCommand extends Command
         foreach ($webhooks as $webhook) {
             $label = "[{$webhook->provider}] Workflow #{$webhook->workflow_id} / Webhook {$webhook->uuid}";
 
-            $registrar = WebhookRegistrarRegistry::resolve($webhook->provider);
+            $registrar = WebhookRegistry::resolve($webhook->provider);
 
             if (! $registrar) {
                 $this->line("  {$label} — SKIPPED (no registrar for provider '{$webhook->provider}')");

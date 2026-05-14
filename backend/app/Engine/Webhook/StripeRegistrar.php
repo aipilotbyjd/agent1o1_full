@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Engine\WebhookRegistrars;
+namespace App\Engine\Webhook;
 
-use App\Engine\Contracts\RegisterableWebhook;
+use App\Contracts\WebhookRegistrar;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Http;
  * Manages webhook endpoints via the Stripe API and verifies
  * incoming webhook signatures using Stripe's v1 HMAC scheme.
  */
-class StripeWebhookRegistrar implements RegisterableWebhook
+class StripeRegistrar implements WebhookRegistrar
 {
     private const BASE_URL = 'https://api.stripe.com/v1';
 

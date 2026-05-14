@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Data;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Carbon\Carbon;
 
 /**
@@ -64,7 +64,7 @@ class DataNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function jsonTransform(NodePayload $payload): array
+    private function jsonTransform(NodeInput $payload): array
     {
         $action = $payload->config['action'] ?? 'pick';
         $data = $payload->inputData['data'] ?? $payload->inputData;
@@ -125,7 +125,7 @@ class DataNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function dateTime(NodePayload $payload): array
+    private function dateTime(NodeInput $payload): array
     {
         $action = $payload->config['action'] ?? 'now';
         $format = $payload->config['format'] ?? 'Y-m-d H:i:s';
@@ -190,7 +190,7 @@ class DataNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function math(NodePayload $payload): array
+    private function math(NodeInput $payload): array
     {
         $action = $payload->config['action'] ?? 'add';
         $a = (float) ($payload->inputData['a'] ?? $payload->config['a'] ?? 0);
@@ -236,7 +236,7 @@ class DataNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function string(NodePayload $payload): array
+    private function string(NodeInput $payload): array
     {
         $action = $payload->config['action'] ?? 'trim';
         $input = (string) ($payload->inputData['value'] ?? $payload->inputData['string'] ?? $payload->config['value'] ?? '');
@@ -289,7 +289,7 @@ class DataNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function crypto(NodePayload $payload): array
+    private function crypto(NodeInput $payload): array
     {
         $action = $payload->config['action'] ?? 'sha256';
         $input = (string) ($payload->inputData['value'] ?? $payload->config['value'] ?? '');
@@ -322,7 +322,7 @@ class DataNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function xml(NodePayload $payload): array
+    private function xml(NodeInput $payload): array
     {
         $action = $payload->config['action'] ?? 'parse';
 
@@ -370,7 +370,7 @@ class DataNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function csv(NodePayload $payload): array
+    private function csv(NodeInput $payload): array
     {
         $action = $payload->config['action'] ?? 'parse';
         $delimiter = (string) ($payload->config['delimiter'] ?? ',');
@@ -440,7 +440,7 @@ class DataNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function htmlExtract(NodePayload $payload): array
+    private function htmlExtract(NodeInput $payload): array
     {
         $html = (string) ($payload->inputData['html'] ?? $payload->config['html'] ?? '');
         $selectors = (array) ($payload->config['selectors'] ?? []);
@@ -511,7 +511,7 @@ class DataNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function renameKeys(NodePayload $payload): array
+    private function renameKeys(NodeInput $payload): array
     {
         $mappings = (array) ($payload->config['mappings'] ?? []);
         $items = (array) ($payload->inputData['items'] ?? [$payload->inputData]);
@@ -540,7 +540,7 @@ class DataNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function removeDuplicates(NodePayload $payload): array
+    private function removeDuplicates(NodeInput $payload): array
     {
         $key = (string) ($payload->config['key'] ?? '');
         $items = (array) ($payload->inputData['items'] ?? []);
@@ -571,7 +571,7 @@ class DataNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function sort(NodePayload $payload): array
+    private function sort(NodeInput $payload): array
     {
         $items = (array) ($payload->inputData['items'] ?? []);
         $sortFields = (array) ($payload->config['sort_fields'] ?? []);
@@ -611,7 +611,7 @@ class DataNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function limit(NodePayload $payload): array
+    private function limit(NodeInput $payload): array
     {
         $items = (array) ($payload->inputData['items'] ?? []);
         $count = max(0, (int) ($payload->config['count'] ?? 10));
@@ -639,7 +639,7 @@ class DataNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function summarize(NodePayload $payload): array
+    private function summarize(NodeInput $payload): array
     {
         $items = (array) ($payload->inputData['items'] ?? []);
         $groupBy = $payload->config['group_by'] ?? null;
@@ -703,7 +703,7 @@ class DataNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function filter(NodePayload $payload): array
+    private function filter(NodeInput $payload): array
     {
         $items = (array) ($payload->inputData['items'] ?? []);
         $conditions = (array) ($payload->config['conditions'] ?? []);
@@ -769,7 +769,7 @@ class DataNode extends AppNode
      *
      * @return array<string, mixed>
      */
-    private function compareDatasets(NodePayload $payload): array
+    private function compareDatasets(NodeInput $payload): array
     {
         $key = (string) ($payload->config['key'] ?? 'id');
         $aItems = (array) ($payload->inputData['a_items'] ?? []);

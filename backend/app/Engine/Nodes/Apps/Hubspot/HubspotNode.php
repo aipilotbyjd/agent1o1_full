@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Hubspot;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 class HubspotNode extends AppNode
 {
@@ -28,7 +28,7 @@ class HubspotNode extends AppNode
         ];
     }
 
-    private function client(NodePayload $payload): \Illuminate\Http\Client\PendingRequest
+    private function client(NodeInput $payload): \Illuminate\Http\Client\PendingRequest
     {
         $token = (string) ($payload->credentials['access_token'] ?? $payload->credentials['api_key'] ?? '');
 
@@ -40,7 +40,7 @@ class HubspotNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createContact(NodePayload $payload): array
+    private function createContact(NodeInput $payload): array
     {
         $properties = $payload->inputData['properties'] ?? array_filter([
             'email' => $payload->inputData['email'] ?? $payload->config['email'] ?? null,
@@ -59,7 +59,7 @@ class HubspotNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function updateContact(NodePayload $payload): array
+    private function updateContact(NodeInput $payload): array
     {
         $contactId = (string) ($payload->inputData['contact_id'] ?? $payload->config['contact_id'] ?? '');
         $properties = $payload->inputData['properties'] ?? $payload->config['properties'] ?? [];
@@ -73,7 +73,7 @@ class HubspotNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getContact(NodePayload $payload): array
+    private function getContact(NodeInput $payload): array
     {
         $contactId = (string) ($payload->inputData['contact_id'] ?? $payload->config['contact_id'] ?? '');
 
@@ -86,7 +86,7 @@ class HubspotNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function searchContacts(NodePayload $payload): array
+    private function searchContacts(NodeInput $payload): array
     {
         $query = (string) ($payload->inputData['query'] ?? $payload->config['query'] ?? '');
 
@@ -104,7 +104,7 @@ class HubspotNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createDeal(NodePayload $payload): array
+    private function createDeal(NodeInput $payload): array
     {
         $properties = $payload->inputData['properties'] ?? array_filter([
             'dealname' => $payload->inputData['dealname'] ?? $payload->config['dealname'] ?? null,
@@ -123,7 +123,7 @@ class HubspotNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function updateDeal(NodePayload $payload): array
+    private function updateDeal(NodeInput $payload): array
     {
         $dealId = (string) ($payload->inputData['deal_id'] ?? $payload->config['deal_id'] ?? '');
         $properties = $payload->inputData['properties'] ?? $payload->config['properties'] ?? [];
@@ -137,7 +137,7 @@ class HubspotNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listDeals(NodePayload $payload): array
+    private function listDeals(NodeInput $payload): array
     {
         $response = $this->client($payload)->get('/crm/v3/objects/deals', [
             'limit' => $payload->config['limit'] ?? 20,
@@ -152,7 +152,7 @@ class HubspotNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createCompany(NodePayload $payload): array
+    private function createCompany(NodeInput $payload): array
     {
         $properties = $payload->inputData['properties'] ?? array_filter([
             'name' => $payload->inputData['name'] ?? $payload->config['name'] ?? null,

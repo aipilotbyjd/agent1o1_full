@@ -3,6 +3,7 @@
 namespace App\Engine;
 
 use App\Engine\Execution\OutputBuffer;
+use App\Engine\Graph\WorkflowGraph;
 
 /**
  * Mutable runtime state for a single workflow execution.
@@ -11,7 +12,7 @@ use App\Engine\Execution\OutputBuffer;
  * decrements in-degree counters as predecessors finish, and
  * coordinates flush/suspend decisions.
  */
-class RunContext
+class WorkflowContext
 {
     /** @var array<string, int> nodeId → remaining predecessor count */
     private array $remainingInDegree;
@@ -406,7 +407,7 @@ class RunContext
     }
 
     /**
-     * Restore RunContext from a checkpoint snapshot.
+     * Restore WorkflowContext from a checkpoint snapshot.
      *
      * @param  array<string, mixed>  $frontierState
      * @param  array<string, mixed>  $outputSnapshot

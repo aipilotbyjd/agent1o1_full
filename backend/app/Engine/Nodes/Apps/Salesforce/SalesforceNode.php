@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Salesforce;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -33,7 +33,7 @@ class SalesforceNode extends AppNode
         ];
     }
 
-    private function client(NodePayload $payload): \Illuminate\Http\Client\PendingRequest
+    private function client(NodeInput $payload): \Illuminate\Http\Client\PendingRequest
     {
         $token = (string) ($payload->credentials['access_token'] ?? '');
         $instanceUrl = rtrim((string) ($payload->credentials['instance_url'] ?? ''), '/');
@@ -46,7 +46,7 @@ class SalesforceNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createRecord(NodePayload $payload): array
+    private function createRecord(NodeInput $payload): array
     {
         $object = (string) ($payload->inputData['object'] ?? $payload->config['object'] ?? 'Contact');
         $fields = $payload->inputData['fields'] ?? $payload->config['fields'] ?? [];
@@ -60,7 +60,7 @@ class SalesforceNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function updateRecord(NodePayload $payload): array
+    private function updateRecord(NodeInput $payload): array
     {
         $object = (string) ($payload->inputData['object'] ?? $payload->config['object'] ?? 'Contact');
         $recordId = (string) ($payload->inputData['record_id'] ?? $payload->config['record_id'] ?? '');
@@ -75,7 +75,7 @@ class SalesforceNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getRecord(NodePayload $payload): array
+    private function getRecord(NodeInput $payload): array
     {
         $object = (string) ($payload->inputData['object'] ?? $payload->config['object'] ?? 'Contact');
         $recordId = (string) ($payload->inputData['record_id'] ?? $payload->config['record_id'] ?? '');
@@ -90,7 +90,7 @@ class SalesforceNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function deleteRecord(NodePayload $payload): array
+    private function deleteRecord(NodeInput $payload): array
     {
         $object = (string) ($payload->inputData['object'] ?? $payload->config['object'] ?? 'Contact');
         $recordId = (string) ($payload->inputData['record_id'] ?? $payload->config['record_id'] ?? '');
@@ -104,7 +104,7 @@ class SalesforceNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function soqlQuery(NodePayload $payload): array
+    private function soqlQuery(NodeInput $payload): array
     {
         $soql = (string) ($payload->inputData['query'] ?? $payload->config['query'] ?? '');
 
@@ -121,7 +121,7 @@ class SalesforceNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listObjects(NodePayload $payload): array
+    private function listObjects(NodeInput $payload): array
     {
         $response = $this->client($payload)->get('/sobjects');
         $response->throw();

@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Google;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 /**
  * Handles Google Drive operations: list_files, download_file, upload_file, update_file, create_folder, delete_file, share_file.
@@ -35,7 +35,7 @@ class GoogleDriveNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listFiles(NodePayload $payload): array
+    private function listFiles(NodeInput $payload): array
     {
         $config = $payload->config;
         $folderId = $payload->inputData['folder_id'] ?? $config['folder_id'] ?? null;
@@ -82,7 +82,7 @@ class GoogleDriveNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function downloadFile(NodePayload $payload): array
+    private function downloadFile(NodeInput $payload): array
     {
         $config = $payload->config;
         $fileId = $payload->inputData['file_id'] ?? $config['file_id'];
@@ -112,7 +112,7 @@ class GoogleDriveNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function updateFile(NodePayload $payload): array
+    private function updateFile(NodeInput $payload): array
     {
         $config = $payload->config;
         $fileId = $payload->inputData['file_id'] ?? $config['file_id'];
@@ -155,7 +155,7 @@ class GoogleDriveNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function deleteFile(NodePayload $payload): array
+    private function deleteFile(NodeInput $payload): array
     {
         $config = $payload->config;
         $fileId = $payload->inputData['file_id'] ?? $config['file_id'];
@@ -180,7 +180,7 @@ class GoogleDriveNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function shareFile(NodePayload $payload): array
+    private function shareFile(NodeInput $payload): array
     {
         $config = $payload->config;
         $fileId = $payload->inputData['file_id'] ?? $config['file_id'];
@@ -209,7 +209,7 @@ class GoogleDriveNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function createFolder(NodePayload $payload): array
+    private function createFolder(NodeInput $payload): array
     {
         $config = $payload->config;
         $name = $payload->inputData['name'] ?? $config['name'];
@@ -238,7 +238,7 @@ class GoogleDriveNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function uploadFile(NodePayload $payload): array
+    private function uploadFile(NodeInput $payload): array
     {
         $config = $payload->config;
         $name = $payload->inputData['name'] ?? $config['name'];

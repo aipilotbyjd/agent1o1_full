@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Google;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 /**
  * Handles Gmail operations: send_email, reply_to_message, get_message, modify_message, add_label, list_messages, list_labels, delete_message.
@@ -34,7 +34,7 @@ class GmailNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function sendEmail(NodePayload $payload): array
+    private function sendEmail(NodeInput $payload): array
     {
         $config = $payload->config;
         $to = $payload->inputData['to'] ?? $config['to'];
@@ -72,7 +72,7 @@ class GmailNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function addLabel(NodePayload $payload): array
+    private function addLabel(NodeInput $payload): array
     {
         $messageId = $payload->inputData['message_id'] ?? $payload->config['message_id'];
         $labelIds = (array) ($payload->inputData['label_ids'] ?? $payload->config['label_ids'] ?? []);
@@ -93,7 +93,7 @@ class GmailNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listMessages(NodePayload $payload): array
+    private function listMessages(NodeInput $payload): array
     {
         $config = $payload->config;
         $query = $payload->inputData['query'] ?? $config['query'] ?? '';
@@ -116,7 +116,7 @@ class GmailNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getMessage(NodePayload $payload): array
+    private function getMessage(NodeInput $payload): array
     {
         $messageId = $payload->inputData['message_id'] ?? $payload->config['message_id'];
         $format = $payload->config['format'] ?? 'full';
@@ -170,7 +170,7 @@ class GmailNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function replyToMessage(NodePayload $payload): array
+    private function replyToMessage(NodeInput $payload): array
     {
         $config = $payload->config;
         $messageId = $payload->inputData['message_id'] ?? $config['message_id'];
@@ -222,7 +222,7 @@ class GmailNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function modifyMessage(NodePayload $payload): array
+    private function modifyMessage(NodeInput $payload): array
     {
         $config = $payload->config;
         $messageId = $payload->inputData['message_id'] ?? $config['message_id'];
@@ -254,7 +254,7 @@ class GmailNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function listLabels(NodePayload $payload): array
+    private function listLabels(NodeInput $payload): array
     {
         $response = $this->authenticatedRequest($payload->credentials)
             ->get(self::BASE_URL.'/labels');
@@ -276,7 +276,7 @@ class GmailNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function deleteMessage(NodePayload $payload): array
+    private function deleteMessage(NodeInput $payload): array
     {
         $messageId = $payload->inputData['message_id'] ?? $payload->config['message_id'];
 

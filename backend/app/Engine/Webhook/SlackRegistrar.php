@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Engine\WebhookRegistrars;
+namespace App\Engine\Webhook;
 
-use App\Engine\Contracts\RegisterableWebhook;
+use App\Contracts\WebhookRegistrar;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * SlackWebhookRegistrar — manages Slack event subscriptions.
+ * SlackRegistrar — manages Slack event subscriptions.
  *
  * ═══════════════════════════════════════════════════════════════
  * HOW SLACK WEBHOOKS WORK (different from GitHub/Stripe)
@@ -52,7 +52,7 @@ use Illuminate\Support\Facades\Log;
  * This is handled in WebhookReceiverController::handleSlackChallenge()
  * BEFORE the queue dispatch, because Slack expects a response within 3 seconds.
  */
-class SlackWebhookRegistrar implements RegisterableWebhook
+class SlackRegistrar implements WebhookRegistrar
 {
     private const BASE_URL = 'https://slack.com/api';
 
@@ -110,7 +110,7 @@ class SlackWebhookRegistrar implements RegisterableWebhook
         $appToken = $credentials['app_token'] ?? null;
 
         if (! $appToken) {
-            Log::warning('SlackWebhookRegistrar: no app_token provided. Slack event subscription URL must be set manually.', [
+            Log::warning('SlackRegistrar: no app_token provided. Slack event subscription URL must be set manually.', [
                 'callback_url' => $callbackUrl,
             ]);
 
@@ -155,7 +155,7 @@ class SlackWebhookRegistrar implements RegisterableWebhook
      */
     public function unregister(string $externalId, array $credentials, array $providerConfig = []): void
     {
-        Log::info('SlackWebhookRegistrar: Slack event subscriptions cannot be removed via API. Please clear the Request URL in your Slack App dashboard.', [
+        Log::info('SlackRegistrar: Slack event subscriptions cannot be removed via API. Please clear the Request URL in your Slack App dashboard.', [
             'external_id' => $externalId,
         ]);
     }

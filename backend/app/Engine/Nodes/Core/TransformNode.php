@@ -2,9 +2,9 @@
 
 namespace App\Engine\Nodes\Core;
 
-use App\Engine\Contracts\NodeHandler;
+use App\Contracts\NodeHandler;
 use App\Engine\NodeResult;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 /**
  * Transforms and reshapes data from upstream nodes.
@@ -16,7 +16,7 @@ use App\Engine\Execution\NodePayload;
  */
 class TransformNode implements NodeHandler
 {
-    public function handle(NodePayload $payload): NodeResult
+    public function handle(NodeInput $payload): NodeResult
     {
         $startTime = hrtime(true);
 
@@ -35,7 +35,7 @@ class TransformNode implements NodeHandler
     /**
      * @return array<string, mixed>
      */
-    private function transform(NodePayload $payload): array
+    private function transform(NodeInput $payload): array
     {
         $mode = $payload->config['mode'] ?? 'mapping';
 
@@ -49,7 +49,7 @@ class TransformNode implements NodeHandler
     /**
      * @return array<string, mixed>
      */
-    private function applyMapping(NodePayload $payload): array
+    private function applyMapping(NodeInput $payload): array
     {
         $mappings = $payload->config['mappings'] ?? [];
         $output = [];

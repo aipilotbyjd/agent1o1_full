@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Data;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Str;
 
 /**
@@ -36,7 +36,7 @@ class StringNode extends AppNode
     /**
      * Concatenate strings
      */
-    private function concat(NodePayload $payload): array
+    private function concat(NodeInput $payload): array
     {
         $strings = $payload->config['strings'] ?? [];
         $separator = $payload->config['separator'] ?? '';
@@ -56,7 +56,7 @@ class StringNode extends AppNode
     /**
      * Split string
      */
-    private function split(NodePayload $payload): array
+    private function split(NodeInput $payload): array
     {
         $string = $payload->config['string'] ?? '';
         $delimiter = $payload->config['delimiter'] ?? ',';
@@ -82,7 +82,7 @@ class StringNode extends AppNode
     /**
      * Replace text
      */
-    private function replace(NodePayload $payload): array
+    private function replace(NodeInput $payload): array
     {
         $string = $payload->config['string'] ?? '';
         $search = $payload->config['search'] ?? '';
@@ -104,7 +104,7 @@ class StringNode extends AppNode
     /**
      * Regex operations
      */
-    private function regex(NodePayload $payload): array
+    private function regex(NodeInput $payload): array
     {
         $string = $payload->config['string'] ?? '';
         $pattern = $payload->config['pattern'] ?? '';
@@ -154,7 +154,7 @@ class StringNode extends AppNode
     /**
      * Change case
      */
-    private function changeCase(NodePayload $payload): array
+    private function changeCase(NodeInput $payload): array
     {
         $string = $payload->config['string'] ?? '';
         $case = $payload->config['case'] ?? 'lower'; // lower | upper | title | camel | snake | kebab
@@ -179,7 +179,7 @@ class StringNode extends AppNode
     /**
      * Trim whitespace
      */
-    private function trim(NodePayload $payload): array
+    private function trim(NodeInput $payload): array
     {
         $string = $payload->config['string'] ?? '';
         $type = $payload->config['type'] ?? 'both'; // both | start | end
@@ -201,7 +201,7 @@ class StringNode extends AppNode
     /**
      * Get substring
      */
-    private function substring(NodePayload $payload): array
+    private function substring(NodeInput $payload): array
     {
         $string = $payload->config['string'] ?? '';
         $start = (int) ($payload->config['start'] ?? 0);
@@ -222,7 +222,7 @@ class StringNode extends AppNode
     /**
      * Template rendering with variable substitution
      */
-    private function template(NodePayload $payload): array
+    private function template(NodeInput $payload): array
     {
         $template = $payload->config['template'] ?? '';
         $variables = $payload->config['variables'] ?? [];
@@ -248,7 +248,7 @@ class StringNode extends AppNode
     /**
      * String length and info
      */
-    private function length(NodePayload $payload): array
+    private function length(NodeInput $payload): array
     {
         $string = $payload->config['string'] ?? '';
 

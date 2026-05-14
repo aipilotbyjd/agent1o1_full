@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Telegram;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 class TelegramNode extends AppNode
 {
@@ -33,7 +33,7 @@ class TelegramNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function sendMessage(NodePayload $payload): array
+    private function sendMessage(NodeInput $payload): array
     {
         $token = $this->botToken($payload->credentials);
         $chatId = $payload->inputData['chat_id'] ?? $payload->config['chat_id'] ?? '';
@@ -59,7 +59,7 @@ class TelegramNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function sendPhoto(NodePayload $payload): array
+    private function sendPhoto(NodeInput $payload): array
     {
         $token = $this->botToken($payload->credentials);
         $chatId = $payload->inputData['chat_id'] ?? $payload->config['chat_id'] ?? '';
@@ -79,7 +79,7 @@ class TelegramNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function sendDocument(NodePayload $payload): array
+    private function sendDocument(NodeInput $payload): array
     {
         $token = $this->botToken($payload->credentials);
         $chatId = $payload->inputData['chat_id'] ?? $payload->config['chat_id'] ?? '';
@@ -99,7 +99,7 @@ class TelegramNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getUpdates(NodePayload $payload): array
+    private function getUpdates(NodeInput $payload): array
     {
         $token = $this->botToken($payload->credentials);
         $offset = $payload->config['offset'] ?? null;
@@ -118,7 +118,7 @@ class TelegramNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function getChat(NodePayload $payload): array
+    private function getChat(NodeInput $payload): array
     {
         $token = $this->botToken($payload->credentials);
         $chatId = $payload->inputData['chat_id'] ?? $payload->config['chat_id'] ?? '';

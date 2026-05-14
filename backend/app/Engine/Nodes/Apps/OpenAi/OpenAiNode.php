@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\OpenAi;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
@@ -31,7 +31,7 @@ class OpenAiNode extends AppNode
         ];
     }
 
-    private function client(NodePayload $payload, int $timeout = 60): PendingRequest
+    private function client(NodeInput $payload, int $timeout = 60): PendingRequest
     {
         $apiKey = $payload->credentials['api_key'] ?? '';
 
@@ -46,7 +46,7 @@ class OpenAiNode extends AppNode
      * @param  array<array{role: string, content: string}>  $messages
      * @return array<string, mixed>
      */
-    private function chatCompletion(NodePayload $payload, array $messages, ?string $model = null, ?float $temperature = null, ?int $maxTokens = null): array
+    private function chatCompletion(NodeInput $payload, array $messages, ?string $model = null, ?float $temperature = null, ?int $maxTokens = null): array
     {
         $config = $payload->config;
 
@@ -67,7 +67,7 @@ class OpenAiNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function chatCompletionOperation(NodePayload $payload): array
+    private function chatCompletionOperation(NodeInput $payload): array
     {
         $config = $payload->config;
         $prompt = $payload->inputData['prompt'] ?? $config['prompt'] ?? '';
@@ -100,7 +100,7 @@ class OpenAiNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function textClassifier(NodePayload $payload): array
+    private function textClassifier(NodeInput $payload): array
     {
         $config = $payload->config;
         $text = $payload->inputData['text'] ?? $config['text'] ?? '';
@@ -129,7 +129,7 @@ class OpenAiNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function summarizer(NodePayload $payload): array
+    private function summarizer(NodeInput $payload): array
     {
         $config = $payload->config;
         $text = $payload->inputData['text'] ?? $config['text'] ?? '';
@@ -158,7 +158,7 @@ class OpenAiNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function embeddings(NodePayload $payload): array
+    private function embeddings(NodeInput $payload): array
     {
         $config = $payload->config;
         $input = $payload->inputData['text'] ?? $config['text'] ?? '';
@@ -185,7 +185,7 @@ class OpenAiNode extends AppNode
     /**
      * @return array<string, mixed>
      */
-    private function imageGeneration(NodePayload $payload): array
+    private function imageGeneration(NodeInput $payload): array
     {
         $config = $payload->config;
         $prompt = $payload->inputData['prompt'] ?? $config['prompt'] ?? '';

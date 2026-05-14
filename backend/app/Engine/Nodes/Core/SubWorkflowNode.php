@@ -2,9 +2,9 @@
 
 namespace App\Engine\Nodes\Core;
 
-use App\Engine\Contracts\NodeHandler;
+use App\Contracts\NodeHandler;
 use App\Engine\NodeResult;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use App\Enums\ExecutionMode;
 use App\Models\Workflow;
 use App\Services\ExecutionService;
@@ -16,7 +16,7 @@ class SubWorkflowNode implements NodeHandler
 {
     public function __construct(private ExecutionService $executionService) {}
 
-    public function handle(NodePayload $payload): NodeResult
+    public function handle(NodeInput $payload): NodeResult
     {
         $startTime = hrtime(true);
 

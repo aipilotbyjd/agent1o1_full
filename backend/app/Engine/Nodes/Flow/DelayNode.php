@@ -2,21 +2,21 @@
 
 namespace App\Engine\Nodes\Flow;
 
-use App\Engine\Contracts\NodeHandler;
-use App\Engine\Contracts\SuspendsExecution;
-use App\Engine\Execution\Suspension;
+use App\Contracts\NodeHandler;
+use App\Contracts\Suspendable;
+use App\Engine\ExecutionPause;
 use App\Engine\NodeResult;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 /**
  * Pauses execution for a configured duration before continuing.
  *
- * Instead of blocking with sleep(), implements SuspendsExecution to
+ * Instead of blocking with sleep(), implements Suspendable to
  * checkpoint state and resume via a delayed queue job.
  */
-class DelayNode implements NodeHandler, SuspendsExecution
+class DelayNode implements NodeHandler, Suspendable
 {
-    public function handle(NodePayload $payload): NodeResult
+    public function handle(NodeInput $payload): NodeResult
     {
         $delaySeconds = (int) ($payload->config['delay_seconds'] ?? $payload->config['seconds'] ?? 0);
 
@@ -26,11 +26,11 @@ class DelayNode implements NodeHandler, SuspendsExecution
         ]);
     }
 
-    public function suspend(NodePayload $payload): Suspension
+    public function suspend(NodeInput $payload): ExecutionPause
     {
         $delaySeconds = (int) ($payload->config['delay_seconds'] ?? $payload->config['seconds'] ?? 0);
 
-        return new Suspension(
+        return new ExecutionPause(
             reason: 'delay',
             resumeAt: now()->addSeconds(max($delaySeconds, 0)),
             nodeOutput: [

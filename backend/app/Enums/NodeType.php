@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Engine\Enums;
+namespace App\Enums;
 
 use App\Engine\Nodes\Core\AgentNode;
 use App\Engine\Nodes\Core\HttpRequestNode;
@@ -18,7 +18,7 @@ use App\Engine\Nodes\Flow\WaitNode;
  * Core and flow-control node types.
  *
  * App nodes (google_sheets.*, slack.*, etc.) are resolved dynamically
- * by NodeRegistry via naming convention — they do NOT need enum cases.
+ * by NodeCatalog via naming convention — they do NOT need enum cases.
  */
 enum NodeType: string
 {
@@ -41,7 +41,7 @@ enum NodeType: string
     case Wait = 'wait';
 
     /**
-     * @return class-string<\App\Engine\Contracts\NodeHandler>
+     * @return class-string<\App\Contracts\NodeHandler>
      */
     public function handlerClass(): string
     {
@@ -61,9 +61,6 @@ enum NodeType: string
         };
     }
 
-    /**
-     * Whether this node type executes synchronously (no I/O).
-     */
     public function isSync(): bool
     {
         return match ($this) {
@@ -74,9 +71,6 @@ enum NodeType: string
         };
     }
 
-    /**
-     * Whether this node type may suspend the execution (checkpoint + requeue).
-     */
     public function isSuspendable(): bool
     {
         return match ($this) {
@@ -85,9 +79,6 @@ enum NodeType: string
         };
     }
 
-    /**
-     * Resolve a node type string to its enum case, falling back gracefully.
-     */
     public static function resolve(string $type): ?self
     {
         return self::tryFrom($type);

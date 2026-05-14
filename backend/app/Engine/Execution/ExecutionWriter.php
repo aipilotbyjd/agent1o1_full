@@ -1,29 +1,17 @@
 <?php
 
-namespace App\Engine\Persistence;
+namespace App\Engine\Execution;
 
 use App\Engine\NodeResult;
-use App\Engine\RunContext;
+use App\Engine\WorkflowContext;
 use App\Engine\Graph\WorkflowGraph;
 use Illuminate\Support\Facades\DB;
 
-/**
- * Accumulates ExecutionNode rows in memory and flushes them
- * in bulk via a single DB::upsert() call.
- *
- * Flush triggers:
- *  - completedSinceFlush >= threshold (default 25)
- *  - Time since last flush >= interval (default 500ms)
- *  - Explicitly on suspend, failure, or completion
- */
-class BatchWriter
+class ExecutionWriter
 {
-    /** @var list<array<string, mixed>> Rows waiting to be flushed */
+    /** @var list<array<string, mixed>> */
     private array $pendingRows = [];
 
-    /**
-     * Queue a completed node for persistence.
-     */
     public function record(
         int $executionId,
         string $nodeId,
@@ -55,11 +43,6 @@ class BatchWriter
         ];
     }
 
-    /**
-     * Flush all pending rows to the database in a single upsert.
-     *
-     * @return int Number of rows flushed.
-     */
     public function flush(): int
     {
         if (empty($this->pendingRows)) {
@@ -73,27 +56,17 @@ class BatchWriter
             $rows,
             ['execution_id', 'node_run_key'],
             [
-                'node_type',
-                'node_name',
-                'status',
-                'started_at',
-                'finished_at',
-                'duration_ms',
-                'output_data',
-                'error',
-                'sequence',
-                'loop_index',
-                'parent_frame',
+                'node_type', 'node_name', 'status',
+                'started_at', 'finished_at', 'duration_ms',
+                'output_data', 'error', 'sequence',
+                'loop_index', 'parent_frame',
             ],
         );
 
         return count($rows);
     }
 
-    /**
-     * Conditionally flush if the RunContext indicates it's time.
-     */
-    public function flushIfNeeded(RunContext $context): int
+    public function flushIfNeeded(WorkflowContext $context): int
     {
         if (! $context->shouldFlush()) {
             return 0;
@@ -105,17 +78,11 @@ class BatchWriter
         return $flushed;
     }
 
-    /**
-     * Get the count of pending (unflushed) rows.
-     */
     public function pendingCount(): int
     {
         return count($this->pendingRows);
     }
 
-    /**
-     * Check if there are rows waiting to be flushed.
-     */
     public function hasPending(): bool
     {
         return ! empty($this->pendingRows);

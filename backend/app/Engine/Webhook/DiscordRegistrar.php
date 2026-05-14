@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Engine\WebhookRegistrars;
+namespace App\Engine\Webhook;
 
-use App\Engine\Contracts\VerifiableWebhook;
+use App\Contracts\WebhookRegistrar;
 use Illuminate\Support\Facades\Log;
 
 /**
- * DiscordWebhookRegistrar — handles Discord Interactions endpoint verification.
+ * DiscordRegistrar — handles Discord Interactions endpoint verification.
  *
  * ═══════════════════════════════════════════════════════════════
  * HOW DISCORD WEBHOOKS WORK (very different from others)
@@ -18,10 +18,10 @@ use Illuminate\Support\Facades\Log;
  * — it must be done manually in the portal.
  *
  * supportsAutoRegistration() returns FALSE for this reason.
- * Discord implements only VerifiableWebhook, not RegisterableWebhook:
+ * Discord implements only WebhookRegistrar for signature verification:
  *   - The engine calls verifySignature() on every incoming request ✓
  *   - The engine calls checkExists() during health checks ✓
- *   - register() and unregister() are never called — no dead stubs needed ✓
+ *   - register() and unregister() are stubs — not used for Discord ✓
  *
  * The user sees a notice in the UI: "Set your Interactions Endpoint URL
  * in the Discord Developer Portal to: {your_callback_url}"
@@ -48,7 +48,7 @@ use Illuminate\Support\Facades\Log;
  * The 'public_key' credential field must contain the Discord application's
  * public key from the Discord Developer Portal.
  */
-class DiscordWebhookRegistrar implements VerifiableWebhook
+class DiscordRegistrar implements WebhookRegistrar
 {
     public function provider(): string
     {
@@ -75,6 +75,27 @@ class DiscordWebhookRegistrar implements VerifiableWebhook
     }
 
     /**
+     * Discord requires manual setup — register() is a no-op stub.
+     *
+     * @return array{external_id: string, secret: string}
+     */
+    public function register(string $callbackUrl, array $events, array $credentials, array $providerConfig = []): array
+    {
+        return [
+            'external_id' => 'manual',
+            'secret' => $credentials['public_key'] ?? '',
+        ];
+    }
+
+    /**
+     * Discord requires manual setup — unregister() is a no-op stub.
+     */
+    public function unregister(string $externalId, array $credentials, array $providerConfig = []): void
+    {
+        // No-op: Discord webhook URLs must be cleared manually in the Developer Portal.
+    }
+
+    /**
      * Verify Discord's Ed25519 signature.
      *
      * Discord signs: timestamp + raw_body using the application's Ed25519 private key.
@@ -92,7 +113,7 @@ class DiscordWebhookRegistrar implements VerifiableWebhook
     public function verifySignature(string $payload, string $signature, string $secret): bool
     {
         if (! extension_loaded('sodium')) {
-            Log::error('DiscordWebhookRegistrar: sodium PHP extension is required for Discord signature verification.');
+            Log::error('DiscordRegistrar: sodium PHP extension is required for Discord signature verification.');
 
             return false;
         }
@@ -110,7 +131,7 @@ class DiscordWebhookRegistrar implements VerifiableWebhook
 
             return sodium_crypto_sign_verify_detached($sigBin, $message, $publicKey);
         } catch (\SodiumException $e) {
-            Log::warning('DiscordWebhookRegistrar: signature verification threw SodiumException', [
+            Log::warning('DiscordRegistrar: signature verification threw SodiumException', [
                 'error' => $e->getMessage(),
             ]);
 

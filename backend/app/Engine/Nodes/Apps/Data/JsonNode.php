@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Data;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 
 /**
  * JSON Node
@@ -31,7 +31,7 @@ class JsonNode extends AppNode
     /**
      * Parse JSON string to object/array
      */
-    private function parse(NodePayload $payload): array
+    private function parse(NodeInput $payload): array
     {
         $jsonString = $payload->config['json_string'] ?? $payload->inputData['json_string'] ?? '';
         $assoc = (bool) ($payload->config['return_array'] ?? true);
@@ -55,7 +55,7 @@ class JsonNode extends AppNode
     /**
      * Convert data to JSON string
      */
-    private function stringify(NodePayload $payload): array
+    private function stringify(NodeInput $payload): array
     {
         $data = $payload->config['data'] ?? $payload->inputData['data'] ?? null;
         $pretty = (bool) ($payload->config['pretty_print'] ?? false);
@@ -91,7 +91,7 @@ class JsonNode extends AppNode
     /**
      * Extract value from JSON using JSONPath-like syntax
      */
-    private function extract(NodePayload $payload): array
+    private function extract(NodeInput $payload): array
     {
         $data = $payload->config['data'] ?? $payload->inputData['data'] ?? null;
         $path = $payload->config['path'] ?? '';
@@ -118,7 +118,7 @@ class JsonNode extends AppNode
     /**
      * Merge multiple JSON objects
      */
-    private function merge(NodePayload $payload): array
+    private function merge(NodeInput $payload): array
     {
         $objects = $payload->config['objects'] ?? $payload->inputData['objects'] ?? [];
         $mode = $payload->config['mode'] ?? 'deep'; // deep | shallow
@@ -142,7 +142,7 @@ class JsonNode extends AppNode
     /**
      * Validate JSON against a schema
      */
-    private function validate(NodePayload $payload): array
+    private function validate(NodeInput $payload): array
     {
         $data = $payload->config['data'] ?? $payload->inputData['data'] ?? null;
         $schema = $payload->config['schema'] ?? [];

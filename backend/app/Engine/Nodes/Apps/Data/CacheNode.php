@@ -3,7 +3,7 @@
 namespace App\Engine\Nodes\Apps\Data;
 
 use App\Engine\Nodes\Apps\AppNode;
-use App\Engine\Execution\NodePayload;
+use App\Engine\NodeInput;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -33,7 +33,7 @@ class CacheNode extends AppNode
     /**
      * Get cached value
      */
-    private function get(NodePayload $payload): array
+    private function get(NodeInput $payload): array
     {
         $key = $payload->config['key'] ?? '';
         $defaultValue = $payload->config['default'] ?? null;
@@ -58,7 +58,7 @@ class CacheNode extends AppNode
     /**
      * Set cached value
      */
-    private function set(NodePayload $payload): array
+    private function set(NodeInput $payload): array
     {
         $key = $payload->config['key'] ?? '';
         $value = $payload->config['value'] ?? $payload->inputData['value'] ?? null;
@@ -88,7 +88,7 @@ class CacheNode extends AppNode
     /**
      * Check if key exists
      */
-    private function has(NodePayload $payload): array
+    private function has(NodeInput $payload): array
     {
         $key = $payload->config['key'] ?? '';
         $prefix = $payload->config['prefix'] ?? 'workflow';
@@ -110,7 +110,7 @@ class CacheNode extends AppNode
     /**
      * Delete cached value
      */
-    private function delete(NodePayload $payload): array
+    private function delete(NodeInput $payload): array
     {
         $key = $payload->config['key'] ?? '';
         $prefix = $payload->config['prefix'] ?? 'workflow';
@@ -132,7 +132,7 @@ class CacheNode extends AppNode
     /**
      * Clear all cache with prefix
      */
-    private function clear(NodePayload $payload): array
+    private function clear(NodeInput $payload): array
     {
         $prefix = $payload->config['prefix'] ?? 'workflow';
 
@@ -149,7 +149,7 @@ class CacheNode extends AppNode
     /**
      * Remember (get or set if missing)
      */
-    private function remember(NodePayload $payload): array
+    private function remember(NodeInput $payload): array
     {
         $key = $payload->config['key'] ?? '';
         $value = $payload->config['value'] ?? $payload->inputData['value'] ?? null;
