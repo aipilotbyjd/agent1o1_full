@@ -2,9 +2,12 @@
 
 namespace App\Exceptions\Role;
 
-use Exception;
+use App\Exceptions\ApiException;
 
-class CannotDeleteRoleWithMembersException extends Exception
+class CannotDeleteRoleWithMembersException extends ApiException
 {
-    //
+    public function __construct()
+    {
+        parent::__construct('Cannot delete a role that still has members assigned to it.', 422);
+    }
 }

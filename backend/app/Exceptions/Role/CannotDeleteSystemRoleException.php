@@ -2,9 +2,12 @@
 
 namespace App\Exceptions\Role;
 
-use Exception;
+use App\Exceptions\ApiException;
 
-class CannotDeleteSystemRoleException extends Exception
+class CannotDeleteSystemRoleException extends ApiException
 {
-    //
+    public function __construct()
+    {
+        parent::__construct('System roles cannot be deleted.', 422);
+    }
 }
