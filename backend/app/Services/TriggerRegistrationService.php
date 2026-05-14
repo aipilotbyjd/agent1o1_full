@@ -2,23 +2,13 @@
 
 namespace App\Services;
 
-use App\Engine\WebhookRegistrars\GitHubWebhookRegistrar;
-use App\Engine\WebhookRegistrars\SlackWebhookRegistrar;
-use App\Engine\WebhookRegistrars\StripeWebhookRegistrar;
+use App\Engine\Contracts\RegisterableWebhook;
+use App\Engine\WebhookRegistrars\WebhookRegistrarRegistry;
 use App\Models\Trigger;
 use Illuminate\Support\Facades\Log;
 
 class TriggerRegistrationService
 {
-    /**
-     * Map of service slugs to registrar classes
-     */
-    private const REGISTRARS = [
-        'github' => GitHubWebhookRegistrar::class,
-        'slack' => SlackWebhookRegistrar::class,
-        'stripe' => StripeWebhookRegistrar::class,
-        // Add more service registrars as needed
-    ];
 
     /**
      * Register a webhook trigger with its external service
@@ -47,9 +37,7 @@ class TriggerRegistrationService
 
             $credentials = $credential->data ?? [];
             $providerConfig = $trigger->getFieldValues();
-
-            // Get events for this trigger type
-            $events = $this->getEventsForTriggerType($trigger->triggerType->slug);
+            $events = $trigger->triggerType->webhook_events ?? [];
 
             // Generate callback URL
             $callbackUrl = $this->getCallbackUrl($trigger);
@@ -156,59 +144,13 @@ class TriggerRegistrationService
         }
     }
 
-    /**
-     * Get registrar instance for a service
-     */
-    private function getRegistrar(string $service): ?object
+    private function getRegistrar(string $service): ?RegisterableWebhook
     {
-        if (!isset(self::REGISTRARS[$service])) {
-            return null;
-        }
-
-        $class = self::REGISTRARS[$service];
-        return new $class();
+        return WebhookRegistrarRegistry::resolveRegisterable($service);
     }
 
-    /**
-     * Get webhook callback URL for a trigger
-     */
     private function getCallbackUrl(Trigger $trigger): string
     {
-        $baseUrl = config('app.url');
-        return "{$baseUrl}/api/v1/webhooks/{$trigger->webhook_uuid}";
-    }
-
-    /**
-     * Map trigger type slugs to event names for the external service
-     */
-    private function getEventsForTriggerType(string $triggerSlug): array
-    {
-        return match ($triggerSlug) {
-            // GitHub events
-            'github_push' => ['push'],
-            'github_pull_request' => ['pull_request'],
-            'github_issue' => ['issues'],
-            'github_release' => ['release'],
-
-            // Slack events
-            'slack_message' => ['message.channels', 'message.groups', 'message.im'],
-            'slack_mention' => ['app_mention'],
-            'slack_reaction' => ['reaction_added'],
-
-            // Stripe events
-            'stripe_charge_succeeded' => ['charge.succeeded'],
-            'stripe_invoice_created' => ['invoice.created'],
-            'stripe_customer_created' => ['customer.created'],
-
-            // Airtable events
-            'airtable_new_record' => ['records.created'],
-            'airtable_updated_record' => ['records.updated'],
-
-            // Discord events
-            'discord_message' => ['message'],
-            'discord_reaction' => ['reaction'],
-
-            default => [],
-        };
+        return config('app.url')."/api/v1/webhooks/{$trigger->webhook_uuid}";
     }
 }
