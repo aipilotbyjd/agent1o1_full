@@ -1,12 +1,12 @@
 <?php
 
-use App\Engine\Data\Suspension;
+use App\Engine\Data\ExecutionPause;
 use Carbon\CarbonImmutable;
 
 test('suspension stores reason and resume time', function () {
     $resumeAt = CarbonImmutable::parse('2026-03-17 12:00:00');
 
-    $suspension = new Suspension(
+    $suspension = new ExecutionPause(
         reason: 'waiting_for_webhook',
         resumeAt: $resumeAt,
     );
@@ -19,7 +19,7 @@ test('suspension stores reason and resume time', function () {
 test('suspension stores node output', function () {
     $resumeAt = CarbonImmutable::parse('2026-03-17 14:00:00');
 
-    $suspension = new Suspension(
+    $suspension = new ExecutionPause(
         reason: 'rate_limited',
         resumeAt: $resumeAt,
         nodeOutput: ['partial' => 'data', 'progress' => 50],

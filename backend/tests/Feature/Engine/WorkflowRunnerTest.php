@@ -1,6 +1,6 @@
 <?php
 
-use App\Engine\WorkflowEngine;
+use App\Engine\WorkflowRunner;
 use App\Enums\ExecutionMode;
 use App\Enums\ExecutionStatus;
 use App\Models\Execution;
@@ -100,7 +100,7 @@ test('executes a single trigger node workflow', function () {
 
     $execution = createEngineExecution($workflow, $owner);
 
-    app(WorkflowEngine::class)->run($execution);
+    app(WorkflowRunner::class)->run($execution);
 
     $execution->refresh();
 
@@ -132,7 +132,7 @@ test('executes a linear trigger → transform workflow', function () {
 
     $execution = createEngineExecution($workflow, $owner);
 
-    app(WorkflowEngine::class)->run($execution);
+    app(WorkflowRunner::class)->run($execution);
 
     $execution->refresh();
 
@@ -169,7 +169,7 @@ test('executes a three-node linear chain', function () {
 
     $execution = createEngineExecution($workflow, $owner);
 
-    app(WorkflowEngine::class)->run($execution);
+    app(WorkflowRunner::class)->run($execution);
 
     $execution->refresh();
 
@@ -203,7 +203,7 @@ test('executes parallel branches that converge', function () {
 
     $execution = createEngineExecution($workflow, $owner);
 
-    app(WorkflowEngine::class)->run($execution);
+    app(WorkflowRunner::class)->run($execution);
 
     $execution->refresh();
 
@@ -225,7 +225,7 @@ test('fails execution when workflow has no published version', function () {
 
     $execution = createEngineExecution($workflow, $owner);
 
-    app(WorkflowEngine::class)->run($execution);
+    app(WorkflowRunner::class)->run($execution);
 
     $execution->refresh();
 
@@ -243,7 +243,7 @@ test('fails execution when workflow has no nodes', function () {
 
     $execution = createEngineExecution($workflow, $owner);
 
-    app(WorkflowEngine::class)->run($execution);
+    app(WorkflowRunner::class)->run($execution);
 
     $execution->refresh();
 
@@ -270,7 +270,7 @@ test('execution nodes have correct sequence numbers', function () {
 
     $execution = createEngineExecution($workflow, $owner);
 
-    app(WorkflowEngine::class)->run($execution);
+    app(WorkflowRunner::class)->run($execution);
 
     $nodes = $execution->nodes()->orderBy('sequence')->get();
 
@@ -292,7 +292,7 @@ test('execution nodes have node_run_key populated', function () {
 
     $execution = createEngineExecution($workflow, $owner);
 
-    app(WorkflowEngine::class)->run($execution);
+    app(WorkflowRunner::class)->run($execution);
 
     $this->assertDatabaseHas('execution_nodes', [
         'execution_id' => $execution->id,
@@ -316,7 +316,7 @@ test('increments workflow execution_count on completion', function () {
 
     $execution = createEngineExecution($workflow, $owner);
 
-    app(WorkflowEngine::class)->run($execution);
+    app(WorkflowRunner::class)->run($execution);
 
     $workflow->refresh();
 

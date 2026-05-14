@@ -1,6 +1,6 @@
 <?php
 
-use App\Engine\WebhookRegistrars\GitHubWebhookRegistrar;
+use App\Engine\Webhook\GitHubWebhookRegistrar;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {

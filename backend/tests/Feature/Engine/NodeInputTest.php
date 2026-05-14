@@ -1,10 +1,10 @@
 <?php
 
-use App\Engine\Data\ExpressionParser;
+use App\Engine\Data\ExpressionResolver;
 use App\Engine\Data\OutputBuffer;
-use App\Engine\RunContext;
-use App\Engine\Runners\NodePayload;
-use App\Engine\Runners\NodePayloadFactory;
+use App\Engine\WorkflowContext;
+use App\Engine\Runners\NodeInput;
+use App\Engine\Runners\NodeInput;
 use App\Engine\WorkflowGraph;
 
 function makeMinimalGraph(array $nodeMap = []): WorkflowGraph
@@ -21,8 +21,8 @@ function makeMinimalGraph(array $nodeMap = []): WorkflowGraph
     );
 }
 
-test('build returns a NodePayload with resolved config', function () {
-    $expressionParser = Mockery::mock(ExpressionParser::class);
+test('build returns a NodeInput with resolved config', function () {
+    $expressionParser = Mockery::mock(ExpressionResolver::class);
 
     $graph = makeMinimalGraph([
         'node_1' => [
@@ -35,17 +35,17 @@ test('build returns a NodePayload with resolved config', function () {
     $outputBuffer = Mockery::mock(OutputBuffer::class);
     $outputBuffer->shouldReceive('get')->andReturn(null);
 
-    $context = new RunContext(
+    $context = new WorkflowContext(
         graph: $graph,
         outputs: $outputBuffer,
         executionId: 123,
         variables: ['var1' => 'val1'],
     );
 
-    $factory = new NodePayloadFactory($expressionParser);
+    $factory = new NodeInput($expressionParser);
     $payload = $factory->build('node_1', $graph, $context);
 
-    expect($payload)->toBeInstanceOf(NodePayload::class)
+    expect($payload)->toBeInstanceOf(NodeInput::class)
         ->and($payload->nodeId)->toBe('node_1')
         ->and($payload->nodeType)->toBe('transform')
         ->and($payload->nodeName)->toBe('My Transform')
@@ -59,7 +59,7 @@ test('build returns a NodePayload with resolved config', function () {
 });
 
 test('build resolves compiled config via expression parser', function () {
-    $expressionParser = Mockery::mock(ExpressionParser::class);
+    $expressionParser = Mockery::mock(ExpressionResolver::class);
 
     $compiledConfig = ['url' => [['type' => 'literal', 'value' => 'https://api.example.com']]];
 
@@ -82,7 +82,7 @@ test('build resolves compiled config via expression parser', function () {
     $outputBuffer = Mockery::mock(OutputBuffer::class);
     $outputBuffer->shouldReceive('get')->andReturn(null);
 
-    $context = new RunContext(
+    $context = new WorkflowContext(
         graph: $graph,
         outputs: $outputBuffer,
         executionId: 456,
@@ -92,7 +92,7 @@ test('build resolves compiled config via expression parser', function () {
         ->with($compiledConfig, Mockery::any())
         ->andReturn(['url' => 'https://api.example.com']);
 
-    $factory = new NodePayloadFactory($expressionParser);
+    $factory = new NodeInput($expressionParser);
     $payload = $factory->build('node_2', $graph, $context);
 
     expect($payload->config)->toBe(['url' => 'https://api.example.com']);

@@ -1,6 +1,6 @@
 <?php
 
-use App\Engine\WorkflowEngine;
+use App\Engine\WorkflowRunner;
 use App\Enums\ExecutionMode;
 use App\Enums\ExecutionStatus;
 use App\Jobs\ResumeWorkflowJob;
@@ -87,7 +87,7 @@ function suspendEdges(array $pairs): array
     ], $pairs);
 }
 
-// ── Delay Node Suspension ───────────────────────────────────
+// ── Delay Node ExecutionPause ───────────────────────────────────
 
 test('delay node suspends execution and dispatches resume job', function () {
     Queue::fake();
@@ -108,7 +108,7 @@ test('delay node suspends execution and dispatches resume job', function () {
 
     $execution = suspendExecution($workflow, $owner);
 
-    app(WorkflowEngine::class)->run($execution);
+    app(WorkflowRunner::class)->run($execution);
 
     $execution->refresh();
 
@@ -164,7 +164,7 @@ test('resume continues execution after checkpoint', function () {
     );
 
     $execution = suspendExecution($workflow, $owner);
-    $engine = app(WorkflowEngine::class);
+    $engine = app(WorkflowRunner::class);
 
     // Phase 1: run until suspension
     $engine->run($execution);
@@ -205,7 +205,7 @@ test('resume fails gracefully with no checkpoint', function () {
     $execution = suspendExecution($workflow, $owner);
     $execution->update(['status' => ExecutionStatus::Waiting]);
 
-    app(WorkflowEngine::class)->resume($execution);
+    app(WorkflowRunner::class)->resume($execution);
 
     $execution->refresh();
 
@@ -229,7 +229,7 @@ test('ResumeWorkflowJob skips execution that is no longer waiting', function () 
     $execution->update(['status' => ExecutionStatus::Cancelled]);
 
     $job = new ResumeWorkflowJob($execution);
-    $job->handle(app(WorkflowEngine::class));
+    $job->handle(app(WorkflowRunner::class));
 
     $execution->refresh();
 
@@ -256,7 +256,7 @@ test('delay node with zero seconds still suspends and resumes immediately', func
 
     $execution = suspendExecution($workflow, $owner);
 
-    app(WorkflowEngine::class)->run($execution);
+    app(WorkflowRunner::class)->run($execution);
 
     $execution->refresh();
 
@@ -265,7 +265,7 @@ test('delay node with zero seconds still suspends and resumes immediately', func
     Queue::assertPushed(ResumeWorkflowJob::class);
 
     // Resume immediately
-    app(WorkflowEngine::class)->resume($execution);
+    app(WorkflowRunner::class)->resume($execution);
     $execution->refresh();
 
     expect($execution->status)->toBe(ExecutionStatus::Completed);

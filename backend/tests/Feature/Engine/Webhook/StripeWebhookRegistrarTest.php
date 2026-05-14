@@ -1,6 +1,6 @@
 <?php
 
-use App\Engine\WebhookRegistrars\StripeWebhookRegistrar;
+use App\Engine\Webhook\StripeWebhookRegistrar;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {

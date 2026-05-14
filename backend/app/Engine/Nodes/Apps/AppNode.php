@@ -25,7 +25,7 @@ abstract class AppNode implements NodeHandler
     /**
      * Map of operation name → callable.
      *
-     * @return array<string, callable(NodePayload): array<string, mixed>>
+     * @return array<string, callable(NodeInput): array<string, mixed>>
      */
     abstract protected function operations(): array;
 

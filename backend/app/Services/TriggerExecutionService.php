@@ -134,7 +134,7 @@ class TriggerExecutionService
      */
     private function executeWorkflow(Trigger $trigger, array $payload, string $source): string
     {
-        // This is a simplified version - actual implementation would use WorkflowEngine
+        // This is a simplified version - actual implementation would use WorkflowRunner
         // For now, just record the execution
 
         $execution = TriggerExecution::create([
@@ -145,7 +145,7 @@ class TriggerExecutionService
             'status' => 'success', // Would be set by actual engine
         ]);
 
-        // TODO: Call WorkflowEngine to actually execute the workflow
+        // TODO: Call WorkflowRunner to actually execute the workflow
         // $executionId = $workflowEngine->execute($trigger->workflow, $payload);
         // $execution->workflow_execution_id = $executionId;
         // $execution->save();
